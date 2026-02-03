@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>لعبة الدودة — هدف 50 حذاء (موبايل)</title>
+  <title>لعبة الدودة — هدف 50 حذاء (موبايل/إصلاح اللمس)</title>
   <style>
     :root{
       --bg:#14161a;
@@ -49,7 +49,7 @@
       border:1px solid #2a3038;
       box-shadow: 0 10px 24px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.03);
       background:#0f1216;
-      touch-action: none; /* يقلل سحب الصفحة وقت اللعب */
+      touch-action: none; /* يمنع سحب/زوم الصفحة أثناء اللعب */
     }
     canvas{
       width:100%; height:auto; display:block;
@@ -81,34 +81,34 @@
     .card h2{margin:0 0 8px}
     .tips{font-size:14px; color:#b7c3cf; line-height:1.6; text-align:justify}
 
-    /* أزرار تحكم للموبايل — ثابت الاتجاه */
+    /* أزرار تحكم للموبايل — ترتيب ثابت واتجاه ثابت */
     .mobile-ctrl{
       direction:ltr; /* يمنع عكس الأماكن في RTL */
       display:grid;
-      grid-template-columns:84px 84px 84px;
+      grid-template-columns:96px 96px 96px;
       grid-template-areas:
         ". up ."
         "left down right";
-      gap:10px; justify-content:center; margin:12px 0 0;
-      user-select:none; touch-action:manipulation;
+      gap:12px; justify-content:center; margin:12px 0 0;
+      user-select:none; 
+      touch-action:none; /* يمنع السحب */
     }
     #btnUp{ grid-area: up; }
     #btnLeft{ grid-area: left; }
     #btnDown{ grid-area: down; }
     #btnRight{ grid-area: right; }
-
     .mobile-ctrl button{
-      padding:16px 0; border-radius:14px; min-width:84px; min-height:84px;
-      font-size:28px; font-weight:900;
+      padding:18px 0; border-radius:16px; min-width:96px; min-height:96px;
+      font-size:32px; font-weight:900;
+      touch-action:none; /* يمنع السحب على الزر نفسه */
     }
 
-    @media (max-width:480px){
+    @media (min-width:520px){
       .mobile-ctrl{
-        grid-template-columns:96px 96px 96px;
-        gap:12px;
+        grid-template-columns:110px 110px 110px;
       }
       .mobile-ctrl button{
-        min-width:96px; min-height:96px; font-size:32px; border-radius:16px;
+        min-width:110px; min-height:110px; font-size:36px;
       }
     }
   </style>
@@ -116,7 +116,7 @@
 <body>
   <div class="wrap">
     <h1>🐶🐍 لعبة الدودة — هدفك 50 حذاء</h1>
-    <p class="sub">جاهزة للموبايل: أزرار كبيرة، أحذية أوضح (ضعف الحجم)، ورسائل وصوت.</p>
+    <p class="sub">جاهزة للموبايل: لمس مضبوط، أزرار كبيرة، أحذية أوضح (ضعف الحجم)، ورسائل وصوت.</p>
 
     <div class="hud">
       <div class="stat">النتيجة: <span id="score" class="v">0</span></div>
@@ -134,7 +134,7 @@
       <!-- التوست أعلى اللوحة -->
       <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
 
-      <!-- Overlay ثابت، نحدث محتواه ونربط الأحداث بالـ JS -->
+      <!-- Overlay -->
       <div id="overlay" class="overlay" role="dialog" aria-modal="true" style="display:flex;">
         <div class="card">
           <h2>جاهز؟ خل نبلّش 🎮</h2>
@@ -154,7 +154,7 @@
       </div>
     </div>
 
-    <!-- أزرار موبايل (ثابتة الاتجاه) -->
+    <!-- أزرار موبايل -->
     <div class="mobile-ctrl" aria-hidden="false">
       <button id="btnUp"   class="sec" aria-label="فوق">⬆️</button>
       <button id="btnLeft" class="sec" aria-label="يسار">⬅️</button>
@@ -166,7 +166,7 @@
   <script>
     /*********** إعدادات ***********/
     const NAME_TEXT = "بكر";
-    const GRID = 20;               // مربعات كبيرة = وضوح أحسن
+    const GRID = 20;
     const BASE_SPEED_MS = 135;
     const SPEED_STEP = 7;
     const TARGET_EATS = 50;
@@ -178,8 +178,7 @@
     const HEAD_OUTLINE= getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim();
     const WALL_HIT_COLOR = getComputedStyle(document.documentElement).getPropertyValue('--danger').trim();
 
-    // أحذية — ضعف الحجم السابق
-    const SHOES = ["👟","👞","🥾","👠","🥿","🩰","🩴","🛼"];
+    const SHOES = ["👟","👞","🥾","👠","🥿","🩰","🩴","🛼"]; // نفس القائمة، لكن الرسم صار ضعف الحجم
 
     /*********** DOM ***********/
     const canvas = document.getElementById("game");
@@ -196,7 +195,6 @@
     const toast = document.getElementById("toast");
     targetEl.textContent = TARGET_EATS;
 
-    // ضبط الـ canvas حسب دقة الشاشة
     function fitCanvasToDPR(){
       const dpr = Math.max(1, window.devicePixelRatio || 1);
       const cssSize = canvas.getBoundingClientRect();
@@ -216,7 +214,6 @@
       const cols = GRID, rows = GRID;
       tile = Math.floor(Math.min(canvas.width, canvas.height) / GRID);
       const startX = Math.floor(cols/2), startY = Math.floor(rows/2);
-
       return {
         cols, rows,
         snake: [{x:startX,y:startY},{x:startX-1,y:startY},{x:startX-2,y:startY}],
@@ -228,10 +225,8 @@
         tickHandle:null, lastStepAt:0
       };
     }
-
     function coordKey(x,y){ return `${x},${y}`; }
     function snakeSet(snake){ const s=new Set(); for(const c of snake){ s.add(coordKey(c.x,c.y)); } return s; }
-
     function spawnFoodRandom(cols, rows, bannedSet){
       let x,y,tries=0;
       do{ x=Math.floor(Math.random()*cols); y=Math.floor(Math.random()*rows); tries++; if(tries>500) break; }
@@ -252,7 +247,6 @@
       scheduleNextTick(true);
       draw();
     }
-
     function pauseResume(){
       if(!state?.running || state?.gameOver) return;
       state.paused = !state.paused;
@@ -260,7 +254,6 @@
       else { if(state.tickHandle) cancelAnimationFrame(state.tickHandle), state.tickHandle=null; }
       pauseBtn.textContent = state.paused ? "تابع اللعب (P)" : "إيقاف مؤقت (P)";
     }
-
     function scheduleNextTick(reset=false){
       if(reset && state.tickHandle){ cancelAnimationFrame(state.tickHandle); }
       state.lastStepAt = performance.now();
@@ -275,7 +268,6 @@
 
     function stepGame(){
       if(!state || !state.running || state.paused || state.gameOver) return;
-
       const {x:nx,y:ny} = state.nextDir;
       if(!(nx===-state.dir.x && ny===-state.dir.y)){ state.dir = {x:nx,y:ny}; }
 
@@ -288,6 +280,7 @@
       const bodySet = snakeSet(state.snake.slice(0,-1));
       if(bodySet.has(coordKey(newHead.x,newHead.y))){ return loseGame(); }
 
+      // تحريك
       state.snake.unshift(newHead);
 
       // أكل؟
@@ -340,7 +333,6 @@
           </div>
         </div>`;
       overlay.style.display = "flex";
-      // ربط آمن للأزرار (بدون inline JS)
       document.getElementById("overlayRestartBtn")?.addEventListener("click", startGame);
       document.getElementById("overlayHideBtn2")?.addEventListener("click", ()=> overlay.style.display="none");
     }
@@ -359,17 +351,21 @@
       const W = canvas.width, H = canvas.height;
       ctx.clearRect(0,0,W,H);
       drawGrid();
-      drawFood(state.food);     // أحذية (ضعف الحجم)
-      drawSnake();              // جسم بشكل حيّة أوضح
+      drawFood(state.food);
+      drawSnake();
     }
-
     function drawGrid(){
       ctx.save();
       ctx.fillStyle = "#0f1216";
       ctx.fillRect(0,0,canvas.width,canvas.height);
       ctx.strokeStyle = "#111820"; ctx.lineWidth = Math.max(1, tile*.03); ctx.globalAlpha=.5;
-      for(let i=0;i<=state.cols;i++){ ctx.beginPath(); ctx.moveTo(i*tile,0); ctx.lineTo(i*tile,state.rows*tile); ctx.stroke(); }
-      for(let j=0;j<=state.rows;j(){ ctx.beginPath(); ctx.moveTo(0,j*tile); ctx.lineTo(state.cols*tile,j*tile); ctx.stroke(); }
+      for(let i=0;i<=state.cols;i++){ 
+        ctx.beginPath(); ctx.moveTo(i*tile,0); ctx.lineTo(i*tile,state.rows*tile); ctx.stroke(); 
+      }
+      /* ←← تم الإصلاح هنا: زيادة ++ بدل القوس الغلط */
+      for (let j = 0; j <= state.rows; j++) {
+        ctx.beginPath(); ctx.moveTo(0,j*tile); ctx.lineTo(state.cols*tile,j*tile); ctx.stroke();
+      }
       ctx.globalAlpha=1; ctx.restore();
     }
 
@@ -378,7 +374,7 @@
       const cx = x*tile + tile/2;
       const cy = y*tile + tile/2;
       ctx.save();
-      // ضعف الحجم السابق (كان ~0.94، الآن ~1.88)
+      /* ضعف الحجم السابق: */
       const fontSize = Math.floor(tile * 1.88);
       ctx.font = `${fontSize}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -388,7 +384,6 @@
     }
 
     function drawSnake(){
-      // الجسم (حيّة): إطار + تعبئة متدرّجة + قشور + كتابة "بكر"
       for(let i=state.snake.length-1;i>=1;i--){
         const seg = state.snake[i];
         const x = seg.x*tile, y = seg.y*tile;
@@ -405,12 +400,10 @@
         roundRect(ctx, x+2, y+2, tile-4, tile-4, r*0.8);
         ctx.fill();
 
-        // بطن خفيف
         ctx.globalAlpha = 0.12; ctx.fillStyle = "#ffffff";
         ctx.fillRect(x+tile*0.18, y+tile*0.42, tile*0.64, tile*0.16);
         ctx.globalAlpha = 1;
 
-        // قشور خفيفة
         ctx.save();
         ctx.beginPath(); roundRect(ctx, x+2, y+2, tile-4, tile-4, r*0.8); ctx.clip();
         ctx.globalAlpha = 0.08; ctx.fillStyle = "#053d33";
@@ -433,7 +426,6 @@
         ctx.restore();
       }
 
-      // الرأس (كلب) مع تدوير
       const head = state.snake[0];
       const hx = head.x*tile, hy = head.y*tile;
 
@@ -487,7 +479,6 @@
     let audioCtx=null;
     function initAudio(){ if(!audioCtx){ const AC = window.AudioContext||window.webkitAudioContext; audioCtx=new AC(); } resumeAudio(); }
     function resumeAudio(){ if(audioCtx && audioCtx.state==="suspended") audioCtx.resume(); }
-
     function playChomp(){
       if(!audioCtx) return;
       const t0 = audioCtx.currentTime;
@@ -496,7 +487,6 @@
       gain.gain.setValueAtTime(0.0001,t0); gain.gain.exponentialRampToValueAtTime(0.3,t0+0.02); gain.gain.exponentialRampToValueAtTime(0.0001,t0+0.14);
       osc.connect(gain).connect(audioCtx.destination); osc.start(t0); osc.stop(t0+0.16);
     }
-
     function playBurpLaugh(){
       if(!audioCtx) return;
       const t0 = audioCtx.currentTime;
@@ -529,27 +519,27 @@
       else if(k==="enter" && overlay.style.display!=="none"){ startGame(); }
     }, {passive:false});
 
-    // أزرار HUD
+    // HUD
     startBtn.addEventListener("click", startGame);
     pauseBtn.addEventListener("click", pauseResume);
 
-    // أزرار Overlay
+    // Overlay
     overlayStartBtn.addEventListener("click", startGame);
     overlayHideBtn.addEventListener("click", ()=> overlay.style.display="none");
 
-    // أزرار الموبايل — تأكيد الاتجاه الصحيح
-    const buttons = [
-      {el:document.getElementById("btnUp"),    dx:0, dy:-1},
-      {el:document.getElementById("btnLeft"),  dx:-1,dy:0},
-      {el:document.getElementById("btnDown"),  dx:0, dy:1},
-      {el:document.getElementById("btnRight"), dx:1, dy:0},
-    ];
-    buttons.forEach(({el,dx,dy})=>{
-      // pointerdown أفضل من click للموبايل
-      el.addEventListener("pointerdown", (e)=>{ e.preventDefault(); setDir(dx,dy); }, {passive:false});
-    });
+    // أزرار الموبايل — ثلاث أحداث (pointer/touch/click) لضمان العمل بكل الأجهزة
+    function bindDirBtn(el, dx, dy){
+      const handler = (e)=>{ e.preventDefault(); setDir(dx,dy); };
+      el.addEventListener("pointerdown", handler, {passive:false});
+      el.addEventListener("touchstart", handler, {passive:false});
+      el.addEventListener("click", handler, {passive:false});
+    }
+    bindDirBtn(document.getElementById("btnUp"),    0,-1);
+    bindDirBtn(document.getElementById("btnLeft"), -1, 0);
+    bindDirBtn(document.getElementById("btnDown"),  0, 1);
+    bindDirBtn(document.getElementById("btnRight"), 1, 0);
 
-    // إظهار التعليمات بالبداية
+    // البداية: عرض التعليمات
     overlay.style.display = "flex";
   </script>
 </body>
