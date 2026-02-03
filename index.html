@@ -3,395 +3,619 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-  <title>سوبر بكر ماريو — النسخة الأسطورية 🐶</title>
+  <title>لعبة بكر الواقعية 🐶</title>
   <style>
     :root {
-      --primary: #00f2fe;
-      --secondary: #4facfe;
-      --accent: #ff0055;
-      --bg: #0a0b10;
-      --card-bg: rgba(255, 255, 255, 0.05);
-      --glass: rgba(20, 20, 25, 0.8);
+      --primary: #00e676; /* لون أخضر ساطع */
+      --secondary: #2979ff;
+      --accent: #ff3d00;
+      --bg: #121212;
+      --glass: rgba(30, 30, 40, 0.85);
+      --text-glow: 0 0 10px rgba(255,255,255,0.5);
     }
 
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
     
     body {
       margin: 0; padding: 0;
       background: var(--bg);
       color: #fff;
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      height: 100vh;
+      font-family: 'Segoe UI', 'Roboto', sans-serif;
+      height: 100vh; height: 100dvh; /* دعم أفضل للموبايل */
       overflow: hidden;
       display: flex; flex-direction: column;
     }
 
-    /* خلفية متحركة بسيطة */
+    /* خلفية ديناميكية */
     body::before {
       content: ""; position: absolute; inset: 0;
-      background: radial-gradient(circle at 50% 50%, #1e2a44 0%, #0a0b10 100%);
-      z-index: -1;
+      background: 
+        radial-gradient(circle at 20% 30%, #1a237e 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, #004d40 0%, var(--bg) 100%);
+      z-index: -2; opacity: 0.5;
     }
 
-    /* HUD - واجهة العرض */
+    /* تأثير اهتزاز الشاشة */
+    @keyframes shake {
+      0% { transform: translate(1px, 1px) rotate(0deg); }
+      10% { transform: translate(-1px, -2px) rotate(-1deg); }
+      20% { transform: translate(-3px, 0px) rotate(1deg); }
+      30% { transform: translate(3px, 2px) rotate(0deg); }
+      40% { transform: translate(1px, -1px) rotate(1deg); }
+      50% { transform: translate(-1px, 2px) rotate(-1deg); }
+      60% { transform: translate(-3px, 1px) rotate(0deg); }
+      100% { transform: translate(1px, -2px) rotate(-1deg); }
+    }
+    .shake-screen { animation: shake 0.5s; }
+
+    /* HUD - واجهة النقاط */
     .hud {
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      padding: 15px; background: var(--glass);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      z-index: 5;
+      display: flex; justify-content: space-between;
+      padding: 15px 25px; background: var(--glass);
+      backdrop-filter: blur(15px);
+      border-bottom: 2px solid rgba(255,255,255,0.05);
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+      z-index: 10;
     }
 
-    .stat-item { text-align: center; }
-    .stat-label { font-size: 10px; color: #aaa; text-transform: uppercase; letter-spacing: 1px; }
-    .stat-value { font-size: 20px; font-weight: 800; color: var(--primary); display: block; }
-    .mega-text { color: #ffcc00; text-shadow: 0 0 10px #ffcc00; }
+    .stat-box { display: flex; flex-direction: column; align-items: center; }
+    .stat-label { font-size: 12px; color: #ccc; letter-spacing: 1px; margin-bottom: 4px;}
+    .stat-value { font-size: 24px; font-weight: 900; text-shadow: var(--text-glow); color: var(--primary); }
 
-    /* منطقة اللعبة */
-    .game-container {
+    /* حاوية اللعبة */
+    .game-wrap {
       flex: 1; position: relative;
       display: flex; align-items: center; justify-content: center;
-      overflow: hidden;
+      padding: 20px 10px; /* مساحة حول اللعبة */
     }
 
     canvas {
-      max-width: 100%; max-height: 100%;
-      box-shadow: 0 0 50px rgba(0,0,0,0.5);
-      image-rendering: pixelated; /* للحفاظ على حدة الرسم */
+      border-radius: 16px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 0 20px rgba(255,255,255,0.05);
+      background: rgba(0,0,0,0.2); /* خلفية شفافة قليلاً */
     }
 
-    /* الأزرار والتحكم */
-    .controls-area {
-      padding: 20px; background: var(--glass);
-      display: flex; justify-content: space-around; align-items: center;
-      backdrop-filter: blur(10px);
+    /* منطقة التحكم */
+    .controls-container {
+      padding: 20px 20px 50px 20px; /* زيادة المسافة السفلية لرفع الأزرار */
+      background: linear-gradient(to top, var(--glass), transparent);
+      display: flex; justify-content: center; align-items: center;
+      gap: 40px;
+      backdrop-filter: blur(5px);
     }
 
-    .d-pad {
-      display: grid; grid-template-columns: repeat(3, 65px); grid-template-rows: repeat(2, 60px); gap: 10px;
+    .d-pad-grid {
+      display: grid; grid-template-columns: repeat(3, 75px); grid-template-rows: repeat(2, 70px); gap: 8px;
     }
 
     .btn-ctrl {
-      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 15px; color: white; font-size: 24px;
+      background: rgba(255,255,255,0.07);
+      border: 2px solid rgba(255,255,255,0.15);
+      border-radius: 18px; color: white; font-size: 32px;
       display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: 0.1s;
+      cursor: pointer; transition: all 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
+      box-shadow: 0 4px 0 rgba(0,0,0,0.3);
     }
-    .btn-ctrl:active { background: var(--primary); transform: scale(0.9); }
-    #btnUp { grid-column: 2; }
+    .btn-ctrl:active { background: var(--primary); transform: translateY(4px); box-shadow: none; color: #000;}
+    
+    /* تنسيق اتجاهات قياسي */
+    #btnUp { grid-column: 2; grid-row: 1; }
     #btnLeft { grid-column: 1; grid-row: 2; }
     #btnDown { grid-column: 2; grid-row: 2; }
     #btnRight { grid-column: 3; grid-row: 2; }
 
-    /* القوائم العائمة */
+    /* القوائم المنبثقة */
     .overlay {
-      position: absolute; inset: 0; background: rgba(0,0,0,0.9);
+      position: absolute; inset: 0; background: rgba(0,0,0,0.85);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      z-index: 100; text-align: center; padding: 20px;
+      z-index: 100; text-align: center; padding: 30px;
+      backdrop-filter: blur(8px);
     }
+    
+    /* شاشة البداية الأولى للموسيقى */
+    #startOverlay { z-index: 200; background: #000; }
 
-    .card {
-      background: var(--card-bg); padding: 30px; border-radius: 30px;
-      border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(20px);
-      max-width: 400px; width: 100%;
+    .card-panel {
+      background: linear-gradient(145deg, rgba(40,40,50,0.9), rgba(20,20,30,0.9));
+      padding: 40px; border-radius: 30px;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      max-width: 450px; width: 100%; animation: floatCard 3s ease-in-out infinite alternate;
     }
+    @keyframes floatCard { from { transform: translateY(0); } to { transform: translateY(-10px); } }
 
-    .btn-main {
-      background: linear-gradient(45deg, var(--primary), var(--secondary));
-      border: none; padding: 15px 40px; border-radius: 50px;
-      color: #000; font-weight: bold; font-size: 18px; cursor: pointer;
-      margin-top: 20px; width: 100%; transition: 0.3s;
-    }
-    .btn-main:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(79, 172, 254, 0.4); }
+    h1 { margin: 0 0 15px; font-size: 2.5em; background: linear-gradient(to right, #fff, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .highlight { color: var(--primary); font-weight: bold; }
 
-    .toast {
-      position: absolute; top: 100px; left: 50%; transform: translateX(-50%);
-      background: var(--accent); padding: 10px 20px; border-radius: 20px;
-      font-weight: bold; opacity: 0; pointer-events: none; transition: 0.3s;
+    .btn-action {
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      border: none; padding: 18px 50px; border-radius: 50px;
+      color: #fff; font-weight: 900; font-size: 22px; cursor: pointer;
+      margin-top: 25px; width: 100%; text-transform: uppercase; letter-spacing: 1px;
+      box-shadow: 0 10px 30px -10px var(--secondary); transition: 0.3s;
     }
-    .toast.show { opacity: 1; top: 80px; }
+    .btn-action:hover { transform: scale(1.05); box-shadow: 0 15px 40px -10px var(--primary); }
+
+    .toast-msg {
+      position: absolute; top: 15%; left: 50%; transform: translateX(-50%) scale(0.8);
+      background: rgba(0,0,0,0.8); padding: 12px 24px; border-radius: 30px;
+      font-weight: 800; font-size: 18px; border: 2px solid var(--primary);
+      opacity: 0; pointer-events: none; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 50;
+    }
+    .toast-msg.show { opacity: 1; transform: translateX(-50%) scale(1); top: 18%; }
 
   </style>
 </head>
-<body>
+<body id="mainBody">
 
-<div class="hud">
-  <div class="stat-item">
-    <span class="stat-label">النقاط</span>
-    <span id="score" class="stat-value">000</span>
-  </div>
-  <div class="stat-item">
-    <span class="stat-label">الأحذية 👟</span>
-    <span id="eaten" class="stat-value">0</span>
-  </div>
-  <div class="stat-item">
-    <span class="stat-label">الهدف</span>
-    <span id="target" class="stat-value">50</span>
+<div id="startOverlay" class="overlay">
+  <div class="card-panel" style="cursor: pointer;" onclick="initAudioAndShowMenu()">
+      <h1 style="font-size: 4em;">🔊</h1>
+      <h1>اضغط لتفعيل الصوت</h1>
+      <p>المتصفح يحتاج إذنك لتشغيل الموسيقى</p>
   </div>
 </div>
 
-<div class="game-container" id="container">
-  <canvas id="game"></canvas>
-  <div id="toast" class="toast">🔥 خوش توكل بكر قنادر!</div>
+<div class="hud">
+  <div class="stat-box">
+    <span class="stat-label">النتيجة</span>
+    <span id="scoreLbl" class="stat-value">0</span>
+  </div>
+  <div class="stat-box">
+    <span class="stat-label">الأحذية المأكولة 👟</span>
+    <span id="eatenLbl" class="stat-value">0</span>
+  </div>
+</div>
 
-  <div id="overlay" class="overlay">
-    <div class="card">
-      <h1 id="title">بكر ماريو Evolved</h1>
-      <p style="color: #ccc; font-size: 14px; line-height: 1.6;">
-        وكل بكر الأحذية لتكبر. ابحث عن <span class="mega-text">الخرية الذهبي</span> النادر (+20)!<br>
-        تجنب الاصطدام بنفسك.
+<div class="game-wrap" id="gameWrapper">
+  <canvas id="gameCanvas"></canvas>
+  <div id="toastBox" class="toast-msg"></div>
+
+  <div id="menuOverlay" class="overlay" style="display: none;">
+    <div class="card-panel">
+      <h1 id="menuTitle">🐶 سوبر بكر الواقعي</h1>
+      <p style="color: #ccc; font-size: 16px; line-height: 1.8;">
+        قم بتوجيه الكلب "بكر" ليأكل الأحذية.<br>
+        احذر من الاصطدام بنفسك!<br>
+        ابحث عن <span class="highlight" style="color:#ffd700">الجوائز الذهبية</span> النادرة.
       </p>
-      <button id="startBtn" class="btn-main">ابدأ اللعب الآن</button>
-      <button onclick="toggleFullScreen()" style="background:none; border:none; color:var(--primary); margin-top:15px; cursor:pointer;">ملء الشاشة ⛶</button>
+      <button id="playBtn" class="btn-action">ابدأ اللعب</button>
     </div>
   </div>
 </div>
 
-<div class="controls-area">
-  <div class="d-pad">
-    <div id="btnUp" class="btn-ctrl">▲</div>
-    <div id="btnLeft" class="btn-ctrl">◀</div>
-    <div id="btnDown" class="btn-ctrl">▼</div>
-    <div id="btnRight" class="btn-ctrl">▶</div>
-  </div>
-  <div class="actions">
-    <button id="pauseBtn" class="btn-ctrl" style="width: 60px; height: 60px; border-radius: 50%;">II</button>
+<div class="controls-container">
+  <div class="d-pad-grid">
+    <div id="btnUp" class="btn-ctrl">⬆️</div>
+    <div id="btnLeft" class="btn-ctrl">⬅️</div>
+    <div id="btnDown" class="btn-ctrl">⬇️</div>
+    <div id="btnRight" class="btn-ctrl">➡️</div>
   </div>
 </div>
 
 <script>
-  /********* الإعدادات الفنية *********/
-  const GRID_COUNT = 20;
-  let state = {
-    snake: [], dir: {x:1, y:0}, nextDir: {x:1, y:0},
-    food: null, bonus: null, megaBonus: null,
-    score: 0, eaten: 0, speed: 120,
-    running: false, paused: false, tick: 0
+  // --- إعدادات المحرك ---
+  const GRID_SIZE = 22; // عدد المربعات
+  let TILE = 0; // حجم المربع (يتم حسابه)
+  
+  // حالة اللعبة
+  let gameState = {
+    snake: [], 
+    dir: {x:1, y:0}, // البداية لليمين
+    nextDir: {x:1, y:0},
+    food: null, bonus: null,
+    score: 0, eaten: 0,
+    speed: 110, // سرعة متوسطة
+    isRunning: false,
+    startTime: 0
   };
 
-  const canvas = document.getElementById("game");
-  const ctx = canvas.getContext("2d");
-  let tileSize = 0;
+  const canvas = document.getElementById("gameCanvas");
+  const ctx = canvas.getContext("2d", { alpha: false }); // تحسين الأداء
 
-  function setupCanvas() {
-    const container = document.getElementById("container");
-    const size = Math.min(container.clientWidth, container.clientHeight) - 20;
+  // --- نظام الصوت المحسن (Web Audio API) ---
+  let audioCtx;
+  let bgmOscillators = []; // للموسيقى الخلفية
+  let isAudioInit = false;
+
+  // دالة لتشغيل نغمة قصيرة (مؤثرات)
+  function sfx(freq, duration, type="sine", vol=0.2, detune=0) {
+    if(!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type; osc.frequency.value = freq; osc.detune.value = detune;
+    gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + duration);
+  }
+
+  // تشغيل موسيقى خلفية بسيطة ومتكررة
+  function startBGM() {
+      if(!audioCtx) return;
+      stopBGM(); // إيقاف أي موسيقى سابقة
+      
+      // خط باص (Bassline) بسيط
+      const bass = audioCtx.createOscillator();
+      const bassGain = audioCtx.createGain();
+      bass.type = 'triangle';
+      bass.frequency.setValueAtTime(110, audioCtx.currentTime); // A2
+      bassGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      bass.connect(bassGain); bassGain.connect(audioCtx.destination);
+      bass.start();
+      bgmOscillators.push(bass);
+      
+      // إيقاع بسيط (نغمة تتكرر كل ثانية)
+      setInterval(() => {
+          if(audioCtx.state === 'running') {
+               sfx(440, 0.05, "square", 0.02); // تيك خفيف
+          }
+      }, 1000);
+  }
+
+  function stopBGM() {
+      bgmOscillators.forEach(osc => osc.stop());
+      bgmOscillators = [];
+  }
+  
+  // التفعيل الأولي للصوت
+  function initAudioAndShowMenu() {
+      if (!isAudioInit) {
+          audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+          // تشغيل نغمة فارغة لفك الحظر
+          sfx(0,0, 'sine', 0); 
+          isAudioInit = true;
+          startBGM(); // بدء الموسيقى الخلفية فوراً
+      }
+      document.getElementById("startOverlay").style.display = "none";
+      document.getElementById("menuOverlay").style.display = "flex";
+      resizeGame();
+  }
+
+
+  // --- دوال الرسم المتقدمة (الواقعية) ---
+  
+  // دالة مساعدة لرسم شكل بيضوي مدور
+  function drawRoundedEllipse(ctx, x, y, w, h, color, rotation=0) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotation);
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, w/2, h/2, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.restore();
+  }
+
+  function drawRealisticSnake(time) {
+    // رسم الجسم من الذيل إلى الرأس
+    for (let i = gameState.snake.length - 1; i >= 0; i--) {
+      const segment = gameState.snake[i];
+      const cx = (segment.x + 0.5) * TILE;
+      const cy = (segment.y + 0.5) * TILE;
+      
+      // حساب زاوية الدوران للقطعة الحالية بناءً على القطعة السابقة
+      let angle = 0;
+      if (i > 0) {
+          const prev = gameState.snake[i-1];
+          const dx = prev.x - segment.x;
+          const dy = prev.y - segment.y;
+          // التعامل مع الالتفاف حول الشاشة
+          if(Math.abs(dx) > 1 || Math.abs(dy) > 1) angle = Math.atan2(-dy, -dx);
+          else angle = Math.atan2(dy, dx);
+      } else {
+          angle = Math.atan2(gameState.dir.y, gameState.dir.x);
+      }
+
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(angle);
+
+      if (i === 0) {
+        // --- رسم رأس الكلب الواقعي ---
+        const headSize = TILE * 1.3;
+        
+        // الفرو الأساسي (تدرج لوني)
+        const furGrad = ctx.createRadialGradient(0, 0, headSize*0.2, 0, 0, headSize*0.6);
+        furGrad.addColorStop(0, "#D9A575"); /* بني ذهبي فاتح */
+        furGrad.addColorStop(1, "#8D5524"); /* بني غامق للأطراف */
+        
+        // شكل الرأس الأساسي
+        drawRoundedEllipse(ctx, 0, 0, headSize, headSize*0.85, furGrad);
+
+        // منطقة الفم والأنف (Snout) - لون أفتح
+        drawRoundedEllipse(ctx, headSize*0.25, 0, headSize*0.5, headSize*0.4, "#EBD2B4");
+
+        // الأنف
+        drawRoundedEllipse(ctx, headSize*0.45, 0, headSize*0.18, headSize*0.12, "#3E2723");
+        
+        // العيون
+        const eyeY = -headSize*0.15;
+        const eyeX = headSize*0.1;
+        // بياض العين
+        drawRoundedEllipse(ctx, eyeX, eyeY, headSize*0.15, headSize*0.15, "white");
+        drawRoundedEllipse(ctx, eyeX, -eyeY, headSize*0.15, headSize*0.15, "white");
+        // حدقة العين
+        drawRoundedEllipse(ctx, eyeX+2, eyeY, headSize*0.08, headSize*0.08, "#000");
+        drawRoundedEllipse(ctx, eyeX+2, -eyeY, headSize*0.08, headSize*0.08, "#000");
+
+        // الأذنين (متحركة قليلاً)
+        const earWag = Math.sin(time / 150) * 0.05;
+        ctx.fillStyle = "#6D4C41"; // لون الأذن الغامق
+        // أذن يسرى
+        ctx.beginPath();
+        ctx.ellipse(-headSize*0.2, -headSize*0.35, headSize*0.15, headSize*0.3, -0.3 + earWag, 0, Math.PI*2);
+        ctx.fill();
+        // أذن يمنى
+        ctx.beginPath();
+        ctx.ellipse(-headSize*0.2, headSize*0.35, headSize*0.15, headSize*0.3, 0.3 - earWag, 0, Math.PI*2);
+        ctx.fill();
+
+        // --- رسم الاسم "بكر" على الرأس ---
+        ctx.fillStyle = "white";
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = TILE * 0.05;
+        ctx.font = `bold ${TILE * 0.35}px Tahoma`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        
+        // ندور النص 90 درجة ليكون بعرض الرأس (لأن الرأس متجه لليمين حالياً)
+        ctx.rotate(Math.PI / 2); 
+        // رسم النص في منتصف الرأس تقريباً
+        ctx.strokeText("بكر", 0, -headSize*0.1);
+        ctx.fillText("بكر", 0, -headSize*0.1);
+
+      } else {
+        // --- رسم الجسم الواقعي (جلد متصل) ---
+        const bodySize = TILE * 0.9;
+        // تدرج لوني للجسم يعطي عمقاً
+        const bodyGrad = ctx.createLinearGradient(-bodySize/2, -bodySize/2, bodySize/2, bodySize/2);
+        bodyGrad.addColorStop(0, i%2===0 ? "#A16A3A" : "#B87F4B"); // تناوب ألوان البني
+        bodyGrad.addColorStop(1, "#6D4C41"); // ظل غامق
+
+        // رسم قطعة الجسم بشكل بيضوي ممدود قليلاً للاتصال
+        drawRoundedEllipse(ctx, 0, 0, bodySize*1.1, bodySize*0.8, bodyGrad);
+        
+        // إضافة ملمس بسيط (نقاط)
+        ctx.fillStyle = "rgba(0,0,0,0.15)";
+        ctx.beginPath(); ctx.arc(bodySize*0.2, -bodySize*0.2, bodySize*0.05, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.arc(-bodySize*0.1, bodySize*0.15, bodySize*0.08, 0, Math.PI*2); ctx.fill();
+      }
+      
+      ctx.restore();
+    }
+  }
+
+  function drawItems(time) {
+    // رسم الطعام (حذاء)
+    if(gameState.food) {
+        const pulse = 1 + Math.sin(time * 0.008) * 0.1;
+        ctx.font = `${TILE * 1.1 * pulse}px Arial`;
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
+        // ظل خفيف تحت الحذاء
+        ctx.fillStyle = "rgba(0,0,0,0.3)";
+        ctx.fillText(gameState.food.type, (gameState.food.x+0.5)*TILE, (gameState.food.y+0.6)*TILE);
+        // الحذاء نفسه
+        ctx.fillText(gameState.food.type, (gameState.food.x+0.5)*TILE, (gameState.food.y+0.5)*TILE);
+    }
     
-    // تصحيح الدقة High DPI
+    // رسم الجائزة (غائط ذهبي مشع)
+    if(gameState.bonus) {
+        const x = (gameState.bonus.x+0.5)*TILE;
+        const y = (gameState.bonus.y+0.5)*TILE;
+        
+        // هالة مشعة
+        const glowSize = TILE * (1 + Math.sin(time * 0.02) * 0.3);
+        const glow = ctx.createRadialGradient(x, y, TILE*0.2, x, y, glowSize);
+        glow.addColorStop(0, "rgba(255, 215, 0, 0.8)");
+        glow.addColorStop(1, "rgba(255, 215, 0, 0)");
+        ctx.fillStyle = glow;
+        ctx.beginPath(); ctx.arc(x, y, glowSize, 0, Math.PI*2); ctx.fill();
+
+        ctx.font = `${TILE * 1.4}px Arial`;
+        ctx.fillText("💩", x, y);
+    }
+  }
+
+
+  // --- منطق اللعبة ---
+  function update() {
+    if(!gameState.isRunning) return;
+
+    gameState.dir = gameState.nextDir;
+    // حساب الموقع الجديد للرأس مع الالتفاف حول الشاشة (Wrap-around)
+    let nx = (gameState.snake[0].x + gameState.dir.x + GRID_SIZE) % GRID_SIZE;
+    let ny = (gameState.snake[0].y + gameState.dir.y + GRID_SIZE) % GRID_SIZE;
+
+    // التحقق من الاصطدام بالجسم
+    // نبدأ التحقق من القطعة رقم 3 لأن الرأس لا يمكنه الاصطدام بالرقبة مباشرة
+    for(let i = 3; i < gameState.snake.length; i++) {
+        if(gameState.snake[i].x === nx && gameState.snake[i].y === ny) {
+            return gameOver();
+        }
+    }
+
+    const newHead = {x: nx, y: ny};
+    gameState.snake.unshift(newHead); // إضافة الرأس الجديد
+
+    let ate = false;
+
+    // أكل الطعام العادي
+    if (gameState.food && nx === gameState.food.x && ny === gameState.food.y) {
+        gameState.score += 10;
+        gameState.eaten++;
+        // صوت أكل + نباح خفيف
+        sfx(500, 0.1, 'square'); setTimeout(()=>sfx(300, 0.15, 'sawtooth', 0.3), 100);
+        showToast("👟 يم يم!", false);
+        spawnFood();
+        ate = true;
+        // زيادة السرعة قليلاً كل 5 أكلات
+        if(gameState.eaten % 5 === 0 && gameState.speed > 70) gameState.speed -= 4;
+    }
+    
+    // أكل الجائزة الكبرى
+    else if(gameState.bonus && nx === gameState.bonus.x && ny === gameState.bonus.y) {
+        gameState.score += 100;
+        gameState.eaten += 5;
+        // اهتزاز الشاشة
+        document.getElementById('mainBody').classList.add('shake-screen');
+        setTimeout(()=>document.getElementById('mainBody').classList.remove('shake-screen'), 500);
+        // صوت انتصار
+        [600, 800, 1000].forEach((f,i) => setTimeout(()=>sfx(f, 0.2, 'triangle', 0.4), i*100));
+        showToast("🌟 جائزة أسطورية! +100", true);
+        gameState.bonus = null;
+        ate = true;
+    }
+
+    if(!ate) gameState.snake.pop(); // إزالة الذيل إذا لم يأكل
+
+    updateHUD();
+  }
+
+  function gameLoop(timeStamp) {
+    // رسم الخلفية (لون داكن يغطي الإطارات السابقة)
+    ctx.fillStyle = "#1a1a24"; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // رسم شبكة خفيفة جداً للأرضية
+    ctx.strokeStyle = "rgba(255,255,255,0.04)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for(let i=0; i<=GRID_SIZE; i++) {
+        ctx.moveTo(i*TILE, 0); ctx.lineTo(i*TILE, canvas.height);
+        ctx.moveTo(0, i*TILE); ctx.lineTo(canvas.width, i*TILE);
+    }
+    ctx.stroke();
+
+    if (timeStamp - gameState.startTime > gameState.speed) {
+        update();
+        gameState.startTime = timeStamp;
+    }
+    
+    drawItems(timeStamp);
+    drawRealisticSnake(timeStamp);
+    
+    if(gameState.isRunning) requestAnimationFrame(gameLoop);
+  }
+
+
+  // --- الوظائف المساعدة ---
+  function spawnFood() {
+    let pos = getFreePosition();
+    gameState.food = { ...pos, type: ["👟","👞","🥾"][Math.floor(Math.random()*3)] };
+    // احتمال 15% لظهور جائزة
+    if(Math.random() < 0.15 && !gameState.bonus) {
+        let bonusPos = getFreePosition();
+        gameState.bonus = { ...bonusPos, spawnTime: performance.now() };
+        // تختفي بعد 6 ثواني
+        setTimeout(() => { if(gameState.bonus && gameState.bonus.x === bonusPos.x) gameState.bonus = null; }, 6000);
+    }
+  }
+
+  function getFreePosition() {
+      let x, y, isFree;
+      do {
+          x = Math.floor(Math.random() * GRID_SIZE);
+          y = Math.floor(Math.random() * GRID_SIZE);
+          isFree = !gameState.snake.some(s => s.x === x && s.y === y) && 
+                   (!gameState.food || (gameState.food.x !== x || gameState.food.y !== y));
+      } while(!isFree);
+      return {x, y};
+  }
+
+  function startGame() {
+    // إعادة تعيين الحالة
+    gameState.snake = [{x: Math.floor(GRID_SIZE/2), y: Math.floor(GRID_SIZE/2)}]; // ابدأ بقطعة واحدة (الرأس)
+    // إضافة جسم مبدئي خلف الرأس
+    gameState.snake.push({x: gameState.snake[0].x-1, y: gameState.snake[0].y});
+    gameState.snake.push({x: gameState.snake[0].x-2, y: gameState.snake[0].y});
+    
+    gameState.dir = {x:1, y:0}; gameState.nextDir = {x:1, y:0};
+    gameState.score = 0; gameState.eaten = 0; gameState.speed = 110;
+    gameState.bonus = null; gameState.isRunning = true;
+    
+    updateHUD();
+    spawnFood();
+    document.getElementById("menuOverlay").style.display = "none";
+    gameState.startTime = performance.now();
+    requestAnimationFrame(gameLoop);
+  }
+
+  function gameOver() {
+    gameState.isRunning = false;
+    // صوت الخسارة
+    sfx(150, 0.5, 'sawtooth', 0.5); sfx(100, 0.6, 'sine', 0.5, -50);
+    
+    document.getElementById("menuTitle").innerHTML = "💥 اصطدمت!";
+    document.querySelector("#menuOverlay p").innerHTML = `النتيجة النهائية: <span class="highlight">${gameState.score}</span><br>أكل بكر ${gameState.eaten} حذاء.`;
+    document.getElementById("playBtn").textContent = "إعادة المحاولة";
+    document.getElementById("menuOverlay").style.display = "flex";
+  }
+
+  function resizeGame() {
+    const wrapper = document.getElementById("gameWrapper");
+    // نأخذ أصغر بُعد (عرض أو ارتفاع) ونطرح منه الهوامش لنجعل اللعبة مربعة
+    const size = Math.min(wrapper.clientWidth, wrapper.clientHeight) - 30;
+    
+    // دعم شاشات الريتينا (عالية الدقة) للحصول على رسم حاد
     const dpr = window.devicePixelRatio || 1;
     canvas.width = size * dpr;
     canvas.height = size * dpr;
     canvas.style.width = size + "px";
     canvas.style.height = size + "px";
+    ctx.scale(dpr, dpr); // تكبير سياق الرسم
     
-    ctx.scale(dpr, dpr);
-    tileSize = size / GRID_COUNT;
-  }
-
-  window.addEventListener("resize", setupCanvas);
-
-  /********* نظام الصوت المتطور *********/
-  const AudioCtx = window.AudioContext || window.webkitAudioContext;
-  let audio;
-  function playNote(f, d, type="sine", v=0.1) {
-    if(!audio) audio = new AudioCtx();
-    const o = audio.createOscillator(), g = audio.createGain();
-    o.type = type; o.frequency.value = f;
-    g.gain.setValueAtTime(v, audio.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + d);
-    o.connect(g); g.connect(audio.destination);
-    o.start(); o.stop(audio.currentTime + d);
-  }
-
-  const sfx = {
-    eat: () => playNote(440, 0.1, "square"),
-    mega: () => { [523, 659, 783, 1046].forEach((f,i) => playNote(f, 0.5, "triangle", 0.15, audio.currentTime + i*0.1)) },
-    fail: () => { [300, 200, 100].forEach((f,i) => playNote(f, 0.4, "sawtooth", 0.2)) }
-  };
-
-  /********* منطق اللعبة *********/
-  function spawnItems() {
-    const free = [];
-    for(let y=0; y<GRID_COUNT; y++) {
-      for(let x=0; x<GRID_COUNT; x++) {
-        if(!state.snake.some(s => s.x === x && s.y === y)) free.push({x, y});
-      }
-    }
-    const pos = free[Math.floor(Math.random()*free.length)];
-    state.food = { ...pos, type: ["👟","👞","🥾"][Math.floor(Math.random()*3)] };
-
-    // فرصة ظهور الجائزة العادية 20%
-    state.bonus = Math.random() < 0.2 ? { ...free[Math.floor(Math.random()*free.length)], time: 5000 } : null;
+    TILE = size / GRID_SIZE; // حساب حجم المربع الجديد
     
-    // فرصة ظهور الغائط العملاق 5%
-    if(Math.random() < 0.05 && !state.megaBonus) {
-      state.megaBonus = { ...free[Math.floor(Math.random()*free.length)], time: 7000 };
+    if(!gameState.isRunning && isAudioInit) {
+         // رسم إطار واحد ثابت إذا كانت اللعبة متوقفة
+         drawRealisticSnake(0);
     }
   }
 
-  function update() {
-    if(!state.running || state.paused) return;
-
-    state.dir = state.nextDir;
-    const head = { x: (state.snake[0].x + state.dir.x + GRID_COUNT) % GRID_COUNT, 
-                   y: (state.snake[0].y + state.dir.y + GRID_COUNT) % GRID_COUNT };
-
-    if(state.snake.some(s => s.x === head.x && s.y === head.y)) return gameOver();
-
-    state.snake.unshift(head);
-    let ate = false;
-
-    // أكل الحذاء
-    if(head.x === state.food.x && head.y === state.food.y) {
-      state.score += 10; state.eaten += 1;
-      sfx.eat(); spawnItems(); ate = true;
-    } 
-    // أكل الغائط العادي
-    else if(state.bonus && head.x === state.bonus.x && head.y === state.bonus.y) {
-      state.score += 50; state.eaten += 5;
-      sfx.eat(); state.bonus = null; ate = true;
-      showToast("💩 خرب حظك! +5");
-    }
-    // أكل الغائط العملاق (The Legend)
-    else if(state.megaBonus && head.x === state.megaBonus.x && head.y === state.megaBonus.y) {
-      state.score += 200; state.eaten += 20;
-      sfx.mega(); state.megaBonus = null; ate = true;
-      showToast("🌈 غائط أسطوووري! +20", true);
-    }
-
-    if(!ate) state.snake.pop();
-    if(state.eaten >= 50) win();
-
-    document.getElementById("score").textContent = state.score.toString().padStart(3, '0');
-    document.getElementById("eaten").textContent = state.eaten;
+  function updateHUD() {
+      document.getElementById("scoreLbl").textContent = gameState.score;
+      document.getElementById("eatenLbl").textContent = gameState.eaten;
   }
 
-  function draw(time) {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // رسم الشبكة الخلفية بدقة
-    ctx.strokeStyle = "rgba(255,255,255,0.03)";
-    for(let i=0; i<=GRID_COUNT; i++) {
-      ctx.beginPath(); ctx.moveTo(i*tileSize, 0); ctx.lineTo(i*tileSize, canvas.height); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(0, i*tileSize); ctx.lineTo(canvas.width, i*tileSize); ctx.stroke();
-    }
-
-    // رسم الطعام
-    ctx.font = `${tileSize*0.8}px Arial`;
-    ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.fillText(state.food.type, (state.food.x+0.5)*tileSize, (state.food.y+0.5)*tileSize);
-
-    // رسم الغائط العادي
-    if(state.bonus) {
-      ctx.fillText("💩", (state.bonus.x+0.5)*tileSize, (state.bonus.y+0.5)*tileSize);
-    }
-
-    // رسم الغائط العملاق (شعاعي وملون)
-    if(state.megaBonus) {
-      const glow = Math.sin(time/100)*10 + 20;
-      ctx.shadowBlur = glow;
-      ctx.shadowColor = `hsl(${time%360}, 100%, 50%)`;
-      ctx.font = `${tileSize * 1.5}px Arial`; // حجم ضخم
-      ctx.fillText("💩", (state.megaBonus.x+0.5)*tileSize, (state.megaBonus.y+0.5)*tileSize);
-      ctx.shadowBlur = 0;
-    }
-
-    // رسم الكلب (الدودة)
-    state.snake.forEach((s, i) => {
-      const x = s.x * tileSize, y = s.y * tileSize;
-      ctx.fillStyle = i === 0 ? "#ff9800" : `rgba(210, 105, 30, ${1 - i/state.snake.length})`;
-      
-      if(i === 0) { // الرأس
-        ctx.beginPath();
-        ctx.roundRect(x+2, y+2, tileSize-4, tileSize-4, 8);
-        ctx.fill();
-        // عيون
-        ctx.fillStyle = "white";
-        ctx.fillRect(x+tileSize*0.2, y+tileSize*0.2, 4, 4);
-        ctx.fillRect(x+tileSize*0.6, y+tileSize*0.2, 4, 4);
-      } else { // الجسم المتموج
-        const shift = Math.sin(time/200 + i)*2;
-        ctx.beginPath();
-        ctx.arc(x+tileSize/2 + shift, y+tileSize/2, tileSize/2.5, 0, Math.PI*2);
-        ctx.fill();
-      }
-    });
-
-    if(state.running) setTimeout(() => requestAnimationFrame(draw), 1000/60);
+  function showToast(msg, isImportant) {
+      const t = document.getElementById("toastBox");
+      t.textContent = msg;
+      t.style.borderColor = isImportant ? "#ffd700" : "var(--primary)";
+      t.style.color = isImportant ? "#ffd700" : "#fff";
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 2000);
   }
 
-  /********* وظائف إضافية *********/
-  function startGame() {
-    state = {
-      snake: [{x:10, y:10}, {x:9, y:10}, {x:8, y:10}],
-      dir: {x:1, y:0}, nextDir: {x:1, y:0},
-      score: 0, eaten: 0, speed: 120,
-      running: true, paused: false
-    };
-    document.getElementById("overlay").style.display = "none";
-    spawnItems();
-    setupCanvas();
-    gameLoop();
-    requestAnimationFrame(draw);
-  }
 
-  function gameLoop() {
-    if(!state.running) return;
-    update();
-    setTimeout(gameLoop, state.speed);
-  }
-
-  function gameOver() {
-    state.running = false;
-    sfx.fail();
-    document.getElementById("title").textContent = "طاح حظك يا بكر! 😂";
-    document.getElementById("overlay").style.display = "flex";
-  }
-
-  function win() {
-    state.running = false;
-    sfx.mega();
-    document.getElementById("title").textContent = "عفية بكوري الجحش! 🎉";
-    document.getElementById("overlay").style.display = "flex";
-  }
-
-  function showToast(msg, isMega=false) {
-    const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.style.background = isMega ? "linear-gradient(45deg, #ff00cc, #3333ff)" : "var(--accent)";
-    t.classList.add("show");
-    setTimeout(() => t.classList.remove("show"), 2000);
-  }
-
+  // --- التحكم ---
   function setDir(x, y) {
-    if(state.dir.x !== -x && state.dir.y !== -y) state.nextDir = {x, y};
+      // منع العودة للخلف مباشرة (مثلاً إذا كنت تمشي يمين لا يمكنك ضغط يسار فوراً)
+      if (gameState.dir.x !== -x && gameState.dir.y !== -y) {
+          gameState.nextDir = {x, y};
+          // صوت نقرة خفيفة عند تغيير الاتجاه
+          if(gameState.isRunning) sfx(800, 0.03, 'sine', 0.05);
+      }
   }
 
-  function toggleFullScreen() {
-    if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-    } else {
-      document.exitFullscreen();
-    }
-  }
+  // ربط الأزرار (المنطق القياسي: يمين=1، يسار=-1)
+  document.getElementById("btnUp").addEventListener('pointerdown', e => { e.preventDefault(); setDir(0, -1); });
+  document.getElementById("btnDown").addEventListener('pointerdown', e => { e.preventDefault(); setDir(0, 1); });
+  document.getElementById("btnLeft").addEventListener('pointerdown', e => { e.preventDefault(); setDir(-1, 0); });
+  document.getElementById("btnRight").addEventListener('pointerdown', e => { e.preventDefault(); setDir(1, 0); });
+  document.getElementById("playBtn").onclick = startGame;
 
-  // أزرار التحكم
-  document.getElementById("startBtn").onclick = startGame;
-  document.getElementById("btnUp").onclick = () => setDir(0, -1);
-  document.getElementById("btnDown").onclick = () => setDir(0, 1);
-  document.getElementById("btnLeft").onclick = () => setDir(-1, 0);
-  document.getElementById("btnRight").onclick = () => setDir(1, 0);
-  document.getElementById("pauseBtn").onclick = () => state.paused = !state.paused;
-
-  // دعم لوحة المفاتيح
   window.addEventListener("keydown", e => {
-    if(e.key === "ArrowUp") setDir(0,-1);
-    if(e.key === "ArrowDown") setDir(0,1);
-    if(e.key === "ArrowLeft") setDir(-1,0);
-    if(e.key === "ArrowRight") setDir(1,0);
+      if(["ArrowUp","w"].includes(e.key)) setDir(0, -1);
+      if(["ArrowDown","s"].includes(e.key)) setDir(0, 1);
+      if(["ArrowLeft","a"].includes(e.key)) setDir(-1, 0);
+      if(["ArrowRight","d"].includes(e.key)) setDir(1, 0);
   });
+  
+  window.addEventListener("resize", resizeGame);
 
-  setupCanvas();
+  // الإعداد الأولي (لن يبدأ حتى يضغط المستخدم على الشاشة الأولى)
+  // resizeGame() سيتم استدعاؤها داخل initAudioAndShowMenu
 </script>
 </body>
 </html>
