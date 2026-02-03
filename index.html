@@ -3,690 +3,555 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
-  <title>لعبة الدودة — لفّ عند الحواف + جائزة 💩 ×5</title>
+  <title>لعبة الدودة — نسخة بكر والاحذية 🐶</title>
   <style>
     :root{
       --bg:#14161a;
       --panel:#1c2026;
       --accent:#00d0b0;
-      --accent2:#ffd166;
       --danger:#ff4d4f;
       --text:#e8ecef;
-      --snakeBorder:#083d2d;
-      --snakeFill1:#1bc8a8;
-      --snakeFill2:#0fb18c;
-
-      --btnGrad1:#1bd0b8;
-      --btnGrad2:#16a085;
-      --btnBorder:#2e3a44;
-      --btnGlow:#19f0d6;
+      --btnGrad1:#e60012; /* Mario Red */
+      --btnGrad2:#b3000e;
+      --btnBorder:#5c0007;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
-      margin:0; background:radial-gradient(1000px 600px at 50% -10%, #222a33 0, var(--bg) 60%);
-      color:var(--text); font-family:"Segoe UI", Tahoma, Arial, system-ui, -apple-system;
+      margin:0; background:radial-gradient(circle at center, #2b3340 0, #000 100%);
+      color:var(--text); font-family:"Segoe UI", Tahoma, Arial, system-ui;
       display:flex; align-items:center; justify-content:center; min-height:100vh; padding:12px;
-      -webkit-tap-highlight-color: transparent;
+      overflow:hidden; touch-action:none;
     }
-    .wrap{ width:min(95vw, 720px); margin:auto; }
-    h1{ margin:0 0 6px; font-size:clamp(18px, 4.6vw, 28px); }
-    .sub{ margin:0 0 12px; color:#aeb8c4; font-size:clamp(12px, 2.8vw, 14px); }
+    .wrap{ width:min(95vw, 680px); margin:auto; display:flex; flex-direction:column; align-items:center;}
+    h1{ margin:0 0 10px; font-size:clamp(18px, 4.5vw, 24px); text-shadow:0 2px 4px #000; color:#fff;}
 
     .hud{
-      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;
-      background:linear-gradient(180deg, #1e232a 0, var(--panel) 100%);
-      border:1px solid #2a3038; border-radius:12px; padding:8px 10px; margin-bottom:10px;
+      width:100%; display:flex; gap:10px; align-items:center; justify-content:space-between;
+      background:#222; border:2px solid #444; border-radius:12px; padding:8px 12px; margin-bottom:10px;
+      box-shadow:0 4px 10px rgba(0,0,0,0.5);
     }
-    .stat{display:flex; gap:6px; align-items:baseline; font-weight:800; font-size:clamp(14px, 3.5vw, 16px)}
-    .v{color:var(--accent)}
-    .btns{display:flex; gap:8px; flex-wrap:wrap}
-    button{
-      background:linear-gradient(180deg, var(--btnGrad1), var(--btnGrad2));
-      color:#002a24; border:1px solid var(--btnBorder); border-radius:12px;
-      padding:10px 16px; font-weight:900; cursor:pointer; transition:transform .08s ease, box-shadow .2s ease, filter .2s ease;
-      font-size:clamp(14px, 3.6vw, 16px);
-      box-shadow: 0 6px 18px rgba(0,0,0,.25), 0 0 0 rgba(25,240,214,0);
-    }
-    button:hover{ filter:brightness(1.05); box-shadow: 0 6px 18px rgba(0,0,0,.25), 0 0 20px rgba(25,240,214,.25); }
-    button:active{ transform:scale(.97); }
-    button.sec{
-      background:linear-gradient(180deg, #2f3946, #2b3440);
-      color:#e5eef5; border:1px solid #394352
-    }
-
+    .stat{font-weight:bold; font-size:14px; color:#ddd;}
+    .v{color:#ffcd00; font-size:16px;} /* Mario Coin Color */
+    
     .canvas-wrap{
-      position:relative; border-radius:14px; overflow:hidden;
-      border:1px solid #2a3038;
-      box-shadow: 0 10px 24px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.03);
-      background:#0f1216;
-      touch-action: none; /* يمنع سحب/زوم الصفحة أثناء اللعب */
+      position:relative; border-radius:12px; overflow:hidden;
+      border:4px solid #fff; box-shadow:0 10px 30px rgba(0,0,0,0.6);
+      background:#5c94fc; /* Mario Sky Blue */
     }
     canvas{
-      width:100%; height:auto; display:block;
-      background:repeating-linear-gradient(0deg, #0f1216 0 24px, #11161c 24px 48px);
-      image-rendering: pixelated;
+      display:block; width:100%; height:auto;
+      background:repeating-linear-gradient(0deg, #5c94fc 0 20px, #6ca0fc 20px 40px);
     }
 
-    /* توست أعلى اللوحة */
-    .toast{
-      position:absolute; top:10px; left:50%;
-      transform:translateX(-50%) translateY(-12px);
-      opacity:0; transition: opacity .25s ease, transform .25s ease;
-      background:#15222b; color:#eaf6f3; border:1px solid #2a3038;
-      padding:8px 14px; border-radius:999px; font-weight:800; letter-spacing:.2px;
-      box-shadow:0 6px 18px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
-      pointer-events:none; font-size:14px;
-    }
-    .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
-
-    .overlay{
-      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-      background:linear-gradient(180deg, rgba(20,22,26,.55), rgba(20,22,26,.75));
-      backdrop-filter:saturate(120%) blur(2px);
-      text-align:center; padding:16px;
-    }
-    .card{
-      background:#11161c; border:1px solid #2a3038; border-radius:14px; padding:16px; max-width:540px;
-    }
-    .card h2{margin:0 0 8px}
-    .tips{font-size:14px; color:#b7c3cf; line-height:1.6; text-align:justify}
-
-    /* أزرار تحكم للموبايل — ترتيب ثابت واتجاه ثابت وحديث */
+    /* أزرار التحكم */
     .mobile-ctrl{
-      direction:ltr; /* يمنع عكس الأماكن في RTL */
-      display:grid;
-      grid-template-columns:minmax(84px, 30%) minmax(84px, 30%) minmax(84px, 30%);
-      grid-template-areas:
-        ". up ."
-        "left down right";
-      gap:12px; justify-content:center; margin:12px 0 0;
-      user-select:none; 
-      touch-action:none; /* يمنع السحب */
+      direction:ltr; margin-top:15px; display:grid;
+      grid-template-columns:repeat(3, 70px); grid-template-rows:repeat(2, 60px);
+      gap:8px; justify-content:center;
     }
-    #btnUp{ grid-area: up; }
-    #btnLeft{ grid-area: left; }
-    #btnDown{ grid-area: down; }
-    #btnRight{ grid-area: right; }
     .mobile-ctrl button{
-      padding:18px 0; border-radius:16px; min-width:84px; min-height:84px;
-      font-size:32px; font-weight:900;
-      touch-action:none;
-      position:relative; overflow:hidden;
+      background:#333; color:#fff; border:2px solid #555; border-radius:10px;
+      font-size:24px; cursor:pointer; touch-action:manipulation;
+      box-shadow:0 4px 0 #111; transition:transform 0.1s;
     }
-    .mobile-ctrl button::after{
-      content:""; position:absolute; inset:-2px; border-radius:inherit;
-      box-shadow:0 0 0 rgba(25,240,214,0); transition: box-shadow .25s ease;
-      pointer-events:none;
-    }
-    .mobile-ctrl button:active::after{
-      box-shadow:0 0 30px rgba(25,240,214,.25), inset 0 0 30px rgba(25,240,214,.15);
-    }
+    .mobile-ctrl button:active{ transform:translateY(4px); box-shadow:0 0 0 #111; background:#444;}
+    #btnUp{ grid-column:2; grid-row:1; background:var(--btnGrad1); border-color:var(--btnBorder); }
+    #btnLeft{ grid-column:1; grid-row:2; }
+    #btnDown{ grid-column:2; grid-row:2; }
+    #btnRight{ grid-column:3; grid-row:2; }
 
-    @media (max-width:480px){
-      .mobile-ctrl{
-        grid-template-columns:minmax(88px, 32%) minmax(88px, 32%) minmax(88px, 32%);
-        gap:12px;
-      }
-      .mobile-ctrl button{
-        min-width:88px; min-height:88px; font-size:30px; border-radius:16px;
-      }
+    /* Overlay */
+    .overlay{
+      position:absolute; inset:0; background:rgba(0,0,0,0.85);
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      text-align:center; padding:20px; z-index:10;
     }
+    .card h2{ color:#ffcd00; text-shadow:2px 2px 0 #b3000e; font-size:32px; margin:0 0 10px;}
+    .start-btn{
+      background:linear-gradient(#00d028, #00941c); color:#fff; border:2px solid #005c11;
+      padding:12px 30px; font-size:20px; font-weight:bold; border-radius:50px;
+      cursor:pointer; box-shadow:0 6px 0 #004d0e; text-shadow:0 1px 2px rgba(0,0,0,0.5);
+      transition:transform 0.1s;
+    }
+    .start-btn:active{ transform:translateY(6px); box-shadow:0 0 0; }
+    
+    .toast{
+      position:absolute; top:20px; left:50%; transform:translateX(-50%) translateY(-50px);
+      background:rgba(0,0,0,0.8); color:#fff; padding:8px 16px; border-radius:20px;
+      font-weight:bold; transition:0.3s; opacity:0; pointer-events:none; border:1px solid #fff;
+    }
+    .toast.show{ transform:translateX(-50%) translateY(0); opacity:1; }
+
   </style>
 </head>
 <body>
-  <div class="wrap" id="wrap">
-    <h1>🐶🐍 لعبة الدودة — لفّ عند الحواف + جائزة 💩 ×5</h1>
-    <p class="sub">متجاوبة للموبايل: الأزرار واضحة بكل الشاشات، الأحذية نابضة، وجائزة 💩 بشعاع تحسب خمس أحذية.</p>
 
-    <div class="hud" id="hud">
-      <div class="stat">النتيجة: <span id="score" class="v">0</span></div>
-      <div class="stat">أكلت: <span id="eaten" class="v">0</span> / <span id="target" class="v">50</span></div>
-      <div class="stat">المتبقي: <span id="left" class="v">50</span></div>
-      <div class="btns">
-        <button id="startBtn">لعبة جديدة</button>
-        <button id="pauseBtn" class="sec">إيقاف مؤقت (P)</button>
+<div class="wrap">
+  <h1>🐶 سوبر بكر ماريو 🐍</h1>
+  
+  <div class="hud">
+    <div class="stat">النقاط: <span id="score" class="v">0</span></div>
+    <div class="stat">الأحذية: <span id="eaten" class="v">0</span></div>
+    <div class="stat">الهدف: <span id="target" class="v">50</span></div>
+    <button id="pauseBtn" style="padding:5px 10px; font-size:12px; cursor:pointer;">II</button>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="game" width="600" height="600"></canvas>
+    
+    <div id="toast" class="toast"></div>
+
+    <div id="overlay" class="overlay">
+      <div class="card">
+        <h2>جاهز؟</h2>
+        <p style="color:#ddd; margin-bottom:20px; line-height:1.6;">
+          اجمع 50 حذاء 👟<br>
+          انتبه من الـ 💩 يظهر ويختفي بسرعة!<br>
+          استمتع بموسيقى ماريو 🎶
+        </p>
+        <button id="startBtn" class="start-btn">ابدأ اللعب</button>
       </div>
-    </div>
-
-    <div class="canvas-wrap" id="canvasWrap">
-      <canvas id="game" width="600" height="600" aria-label="لوحة اللعبة"></canvas>
-
-      <!-- التوست أعلى اللوحة -->
-      <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
-
-      <!-- Overlay -->
-      <div id="overlay" class="overlay" role="dialog" aria-modal="true" style="display:flex;">
-        <div class="card">
-          <h2>جاهز؟ خل نبلّش 🎮</h2>
-          <div class="tips">
-            <p>رأس الدودة كلب 🐶. هدفك تأكل <b>50</b> حذاء. عندك جائزة 💩 أكبر تطلع كل كم حذاء وتحسب ×5.</p>
-            <ul>
-              <li>التحكم: الأسهم ⬅️⬆️⬇️➡️ أو WASD</li>
-              <li>موبايل: الأزرار بالأسفل (يمين = يمين ✔️)</li>
-              <li>زر <b>P</b> للإيقاف المؤقت</li>
-            </ul>
-          </div>
-          <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:8px">
-            <button id="overlayStartBtn">ابدأ اللعب</button>
-            <button id="overlayHideBtn" class="sec">إخفاء</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- أزرار موبايل -->
-    <div class="mobile-ctrl" id="mobileCtrl" aria-hidden="false">
-      <button id="btnUp"   class="sec" aria-label="فوق">⬆️</button>
-      <button id="btnLeft" class="sec" aria-label="يسار">⬅️</button>
-      <button id="btnDown" class="sec" aria-label="جوه">⬇️</button>
-      <button id="btnRight"class="sec" aria-label="يمين">➡️</button>
     </div>
   </div>
 
-  <script>
-    /*********** إعدادات ***********/
-    const NAME_TEXT = "بكر";
-    const GRID = 20;                 // شبكة 20×20 (واضحة)
-    const BASE_SPEED_MS = 135;
-    const SPEED_STEP = 7;
-    const TARGET_EATS = 50;
-    const MIN_SPEED_MS = 70;
+  <div class="mobile-ctrl">
+    <button id="btnUp">⬆️</button>
+    <button id="btnLeft">⬅️</button>
+    <button id="btnDown">⬇️</button>
+    <button id="btnRight">➡️</button>
+  </div>
+</div>
 
-    // جائزة 💩 كل كم حذاء؟
-    const BONUS_EVERY = 7;           // كل 7 أحذية يطلع 💩
-    const BONUS_VALUE = 5;           // يحسب 5 أحذية
-    const BONUS_EMOJI = "💩";
+<script>
+  /********* إعدادات اللعبة *********/
+  const NAME = "بكر";
+  const GRID = 20; 
+  const TARGET = 50;
+  const BONUS_LIFETIME = 5000; // 5 ثواني للجائزة
+  
+  // ألوان الحية
+  const SNAKE_COLOR_1 = "#ff9800"; // برتقالي كلبي
+  const SNAKE_COLOR_2 = "#795548"; // بني
 
-    const BODY_BORDER = getComputedStyle(document.documentElement).getPropertyValue('--snakeBorder').trim();
-    const BODY_FILL1  = getComputedStyle(document.documentElement).getPropertyValue('--snakeFill1').trim();
-    const BODY_FILL2  = getComputedStyle(document.documentElement).getPropertyValue('--snakeFill2').trim();
-    const HEAD_OUTLINE= getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim();
-    const WALL_HIT_COLOR = getComputedStyle(document.documentElement).getPropertyValue('--danger').trim();
+  const SHOES = ["👟","👞","🥾","👠","🥿","🩴"];
 
-    // أحذية (أوضح + سنضيف نبض بالرسم)
-    const SHOES = ["👟","👞","🥾","👠","🥿","🩰","🩴","🛼"];
+  // حالة اللعبة
+  let canvas, ctx, tile;
+  let state = {
+    snake: [], dir: {x:1, y:0}, nextDir: {x:1, y:0},
+    food: null, bonus: null,
+    score: 0, eaten: 0,
+    lastTick: 0, speed: 130,
+    running: false, paused: false,
+    mouthOpen: false, // للتحكم بفم الكلب
+    wavyOffset: 0 // لحركة الجسم الملتوية
+  };
 
-    /*********** DOM ***********/
-    const wrap = document.getElementById("wrap");
-    const hud = document.getElementById("hud");
-    const mobileCtrl = document.getElementById("mobileCtrl");
-    const canvasWrap = document.getElementById("canvasWrap");
-    const canvas = document.getElementById("game");
-    const ctx = canvas.getContext("2d");
-    const scoreEl = document.getElementById("score");
-    const eatenEl = document.getElementById("eaten");
-    const targetEl = document.getElementById("target");
-    const leftEl = document.getElementById("left");
-    const overlay = document.getElementById("overlay");
-    const overlayStartBtn = document.getElementById("overlayStartBtn");
-    const overlayHideBtn = document.getElementById("overlayHideBtn");
-    const startBtn = document.getElementById("startBtn");
-    const pauseBtn = document.getElementById("pauseBtn");
-    const toast = document.getElementById("toast");
-    targetEl.textContent = TARGET_EATS;
+  /********* نظام الصوت (موسيقى ماريو) *********/
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  let actx;
 
-    /*********** قياس وحجم الساحة حسب الشاشة (حتى تبقى الأزرار واضحة) ***********/
-    function fitCanvasToViewport(){
-      const dpr = Math.max(1, window.devicePixelRatio || 1);
+  function initAudio(){ if(!actx) actx = new AudioContext(); if(actx.state==='suspended') actx.resume(); }
 
-      // المساحة المتاحة = ارتفاع الشاشة - HUD - أزرار - هوامش بسيطة
-      const hudH = hud.offsetHeight || 0;
-      const ctrlH = mobileCtrl.offsetHeight || 0;
-      const margins = 28; // هامش مريح
-      const availH = Math.max(240, window.innerHeight - hudH - ctrlH - margins);
+  // مولد نغمات بسيط (Oscillator)
+  function beep(freq, duration, type="square", vol=0.1, time=0) {
+    if(!actx) return;
+    const osc = actx.createOscillator();
+    const gain = actx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, actx.currentTime + time);
+    gain.gain.setValueAtTime(vol, actx.currentTime + time);
+    gain.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + time + duration);
+    osc.connect(gain); gain.connect(actx.destination);
+    osc.start(actx.currentTime + time);
+    osc.stop(actx.currentTime + time + duration);
+  }
 
-      // العرض المتاح ضمن اللفّاف
-      const availW = wrap.clientWidth || window.innerWidth;
+  // نوتات ماريو التقريبية
+  function playMarioStart() {
+    initAudio();
+    const t = 0;
+    // Intro
+    [660, 660, 660, 510, 660, 770, 380].forEach((f, i) => {
+      let time = i < 3 ? i*0.15 : i===3 ? 0.45 : i===4 ? 0.6 : i===5 ? 0.9 : 1.2;
+      beep(f, 0.1, "square", 0.1, time);
+    });
+    // Bass line start
+    setTimeout(() => {
+        // Theme simplified
+        [523, 392, 330, 440, 493, 466, 440].forEach((f, i) => beep(f, 0.1, "triangle", 0.08, i*0.2));
+    }, 1500);
+  }
 
-      // نبقي اللوحة مربعة، أصغر من العرض/الارتفاع
-      const cssSize = Math.max(240, Math.min(availW, availH));
-      canvas.style.width = `${cssSize}px`;
-      canvas.style.height = `${cssSize}px`;
+  function playMarioDeath() {
+    initAudio();
+    // Death sound
+    [1000, 700, 500].forEach((f,i) => beep(f, 0.08, "square", 0.15, i*0.1));
+    setTimeout(() => beep(300, 0.4, "sawtooth", 0.2, 0), 400);
+  }
 
-      // دقة فعلية
-      const px = Math.floor(cssSize * dpr);
-      canvas.width = px;
-      canvas.height = px;
+  function playVictorySound() {
+    initAudio();
+    // Level Completeish
+    [523, 659, 783, 1046, 783, 1046].forEach((f, i) => beep(f, 0.1, "square", 0.1, i*0.12));
+  }
 
-      // حجم الخلية بالبكسل
-      tile = Math.floor(Math.min(canvas.width, canvas.height) / state.cols);
+  function playBark() {
+    initAudio();
+    if(!actx) return;
+    // محاكاة نباح باستخدام ضوضاء وموجة منخفضة
+    const osc = actx.createOscillator();
+    const gain = actx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(300, actx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(50, actx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.2, actx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + 0.15);
+    osc.connect(gain); gain.connect(actx.destination);
+    osc.start(); osc.stop(actx.currentTime + 0.16);
+  }
+
+  /********* المحرك *********/
+  function init() {
+    canvas = document.getElementById("game");
+    ctx = canvas.getContext("2d");
+    resize();
+    window.addEventListener("resize", resize);
+    
+    // Controls
+    document.addEventListener("keydown", e => {
+      if(["ArrowUp","w"].includes(e.key)) setDir(0,-1);
+      if(["ArrowDown","s"].includes(e.key)) setDir(0,1);
+      if(["ArrowLeft","a"].includes(e.key)) setDir(-1,0);
+      if(["ArrowRight","d"].includes(e.key)) setDir(1,0);
+    });
+    
+    // Mobile Buttons
+    bindBtn("btnUp", 0, -1);
+    bindBtn("btnDown", 0, 1);
+    bindBtn("btnLeft", -1, 0);
+    bindBtn("btnRight", 1, 0);
+
+    document.getElementById("startBtn").onclick = startGame;
+    document.getElementById("pauseBtn").onclick = togglePause;
+  }
+
+  function resize() {
+    const size = Math.min(window.innerWidth - 30, window.innerHeight - 250, 600);
+    canvas.style.width = size + "px";
+    canvas.style.height = size + "px";
+    canvas.width = size; canvas.height = size;
+    tile = size / GRID;
+    draw();
+  }
+
+  function bindBtn(id, x, y) {
+    const btn = document.getElementById(id);
+    const fn = (e) => { e.preventDefault(); setDir(x,y); };
+    btn.addEventListener("touchstart", fn);
+    btn.addEventListener("mousedown", fn);
+  }
+
+  function setDir(x, y) {
+    if(state.dir.x !== -x && state.dir.y !== -y) state.nextDir = {x,y};
+  }
+
+  function startGame() {
+    document.getElementById("overlay").style.display = "none";
+    initAudio();
+    playMarioStart(); // موسيقى البداية
+
+    // Reset State
+    state.snake = [{x:10, y:10}, {x:9, y:10}, {x:8, y:10}];
+    state.dir = {x:1, y:0}; state.nextDir = {x:1, y:0};
+    state.score = 0; state.eaten = 0; state.speed = 130;
+    state.bonus = null;
+    state.running = true; state.paused = false;
+    spawnFood();
+    
+    updateUI();
+    requestAnimationFrame(loop);
+  }
+
+  function togglePause() {
+    if(!state.running) return;
+    state.paused = !state.paused;
+    if(!state.paused) requestAnimationFrame(loop);
+  }
+
+  function spawnFood() {
+    let valid = false, x, y;
+    while(!valid) {
+      x = Math.floor(Math.random() * GRID);
+      y = Math.floor(Math.random() * GRID);
+      valid = !state.snake.some(s => s.x === x && s.y === y);
     }
-    window.addEventListener("resize", fitCanvasToViewport);
+    state.food = {x, y, type: SHOES[Math.floor(Math.random()*SHOES.length)]};
+  }
 
-    let tile; // يُحدَّث داخل fitCanvasToViewport
-    let state;
-
-    function defaultState(){
-      const cols = GRID, rows = GRID;
-      const startX = Math.floor(cols/2), startY = Math.floor(rows/2);
-
-      return {
-        cols, rows,
-        snake: [{x:startX,y:startY},{x:startX-1,y:startY},{x:startX-2,y:startY}],
-        dir:{x:1,y:0}, nextDir:{x:1,y:0},
-        food: null,
-        bonus: null, // {x,y,createdAt}
-        normalSinceBonus: 0,
-        grow: 0, // عدد القطع اللي تكبرها الدودة تدريجيًا
-        score:0, eaten:0,
-        speedMs:BASE_SPEED_MS,
-        running:false, paused:false, gameOver:false, won:false,
-        tickHandle:null, lastStepAt:0
-      };
+  function spawnBonus() {
+    let valid = false, x, y;
+    while(!valid) {
+      x = Math.floor(Math.random() * GRID);
+      y = Math.floor(Math.random() * GRID);
+      // تأكد لا يكون فوق الحية ولا فوق الأكل
+      valid = !state.snake.some(s => s.x === x && s.y === y) && (state.food.x !== x || state.food.y !== y);
     }
+    // spawnTime لتتبع الـ 5 ثواني
+    state.bonus = {x, y, spawnTime: performance.now()};
+  }
 
-    function coordKey(x,y){ return `${x},${y}`; }
-    function snakeSet(snake){ const s=new Set(); for(const c of snake){ s.add(coordKey(c.x,c.y)); } return s; }
+  function loop(now) {
+    if(!state.running) return;
+    if(state.paused) return;
 
-    function spawnFoodRandom(bannedSet){
-      let x,y,tries=0;
-      do{ x=Math.floor(Math.random()*state.cols); y=Math.floor(Math.random()*state.rows); tries++; if(tries>500) break; }
-      while(bannedSet.has(coordKey(x,y)) || (state.bonus && state.bonus.x===x && state.bonus.y===y));
-      const emoji = SHOES[Math.floor(Math.random()*SHOES.length)];
-      return {x,y,emoji};
-    }
-
-    function spawnBonusRandom(){
-      const banned = snakeSet(state.snake);
-      if(state.food) banned.add(coordKey(state.food.x, state.food.y));
-      let x,y,tries=0;
-      do{ x=Math.floor(Math.random()*state.cols); y=Math.floor(Math.random()*state.rows); tries++; if(tries>500) break; }
-      while(banned.has(coordKey(x,y)));
-      return {x,y,createdAt: performance.now()};
-    }
-
-    function startGame(){
-      state = defaultState();
-      fitCanvasToViewport();
-      hideToast(true);
-      overlay.style.display = "none";
-      scoreEl.textContent = "0";
-      eatenEl.textContent = "0";
-      leftEl.textContent = TARGET_EATS;
-      state.food = spawnFoodRandom(snakeSet(state.snake));
-      state.running = true; state.paused = false; state.gameOver = false; state.won = false;
-      initAudio();
-      scheduleNextTick(true);
-      draw();
-    }
-
-    function pauseResume(){
-      if(!state?.running || state?.gameOver) return;
-      state.paused = !state.paused;
-      if(!state.paused){ scheduleNextTick(true); resumeAudio(); }
-      else { if(state.tickHandle) cancelAnimationFrame(state.tickHandle), state.tickHandle=null; }
-      pauseBtn.textContent = state.paused ? "تابع اللعب (P)" : "إيقاف مؤقت (P)";
-    }
-
-    function scheduleNextTick(reset=false){
-      if(reset && state.tickHandle){ cancelAnimationFrame(state.tickHandle); }
-      state.lastStepAt = performance.now();
-      const step = (t)=>{
-        const elapsed = t - state.lastStepAt;
-        if(elapsed >= state.speedMs){ stepGame(); state.lastStepAt = t; }
-        draw(t);
-        if(state.running && !state.paused && !state.gameOver){ state.tickHandle = requestAnimationFrame(step); }
-      };
-      state.tickHandle = requestAnimationFrame(step);
-    }
-
-    function stepGame(){
-      if(!state || !state.running || state.paused || state.gameOver) return;
-
-      // تحديث الاتجاه (لا ترجع 180°)
-      const {x:nx,y:ny} = state.nextDir;
-      if(!(nx===-state.dir.x && ny===-state.dir.y)){ state.dir = {x:nx,y:ny}; }
-
-      const head = state.snake[0];
-
-      // لفّ عند الحواف (torus wrap)
-      let nhx = head.x + state.dir.x;
-      let nhy = head.y + state.dir.y;
-      nhx = (nhx + state.cols) % state.cols;
-      nhy = (nhy + state.rows) % state.rows;
-
-      const newHead = {x: nhx, y: nhy};
-
-      // اصطدام ذاتي (يبقى خسارة)
-      const bodySet = snakeSet(state.snake.slice(0,-1));
-      if(bodySet.has(coordKey(newHead.x,newHead.y))){ return loseGame(); }
-
-      // تحريك
-      state.snake.unshift(newHead);
-
-      let ateSomething = false;
-
-      // أكل جائزة 💩 ؟
-      if(state.bonus && newHead.x===state.bonus.x && newHead.y===state.bonus.y){
-        // تزيد ×5
-        state.eaten += BONUS_VALUE;
-        state.score += BONUS_VALUE * 10;
-        state.grow += BONUS_VALUE;
-        ateSomething = true;
-        state.bonus = null;
-        scoreEl.textContent = state.score;
-        eatenEl.textContent = state.eaten;
-        leftEl.textContent = Math.max(0, TARGET_EATS - state.eaten);
-        showToast("جائزة ×5! 💩");
-        // فوز إذا وصل الهدف
-        if(state.eaten >= TARGET_EATS){ return winGame(); }
-      }
-
-      // أكل طبيعي؟
-      if(state.food && newHead.x===state.food.x && newHead.y===state.food.y){
-        state.eaten += 1;
-        state.score += 10;
-        state.grow += 1;
-        ateSomething = true;
-        scoreEl.textContent = state.score;
-        eatenEl.textContent = state.eaten;
-        leftEl.textContent = Math.max(0, TARGET_EATS - state.eaten);
-
-        playChomp();
-        showToast("بالعافية بكوري");
-
-        // تسريع بسيط
-        if(state.eaten % SPEED_STEP === 0 && state.speedMs > MIN_SPEED_MS){ state.speedMs -= 8; }
-
-        // سبون أكل طبيعي جديد
-        const occupied = snakeSet(state.snake);
-        if(state.bonus) occupied.add(coordKey(state.bonus.x, state.bonus.y));
-        state.food = spawnFoodRandom(occupied);
-
-        // جائزة 💩 كل BONUS_EVERY أكلات طبيعية
-        state.normalSinceBonus++;
-        if(state.normalSinceBonus >= BONUS_EVERY && !state.bonus){
-          state.bonus = spawnBonusRandom();
-          state.normalSinceBonus = 0;
-        }
-
-        // فوز إذا وصل الهدف
-        if(state.eaten >= TARGET_EATS){ return winGame(); }
-      }
-
-      // إذا ما أكل شي، نقص الذيل إلا إذا عنده نمو متراكم
-      if(!ateSomething){
-        if(state.grow > 0){ state.grow--; } else { state.snake.pop(); }
-      }
+    // Logic Timer
+    if(now - state.lastTick > state.speed) {
+      updateLogic();
+      state.lastTick = now;
     }
 
-    function winGame(){
-      state.won = true; state.gameOver = true; state.running = false;
-      if(state.tickHandle){ cancelAnimationFrame(state.tickHandle); state.tickHandle=null; }
-      playBurpLaugh();
-      showEndOverlay(true, state.eaten);
-      flashOverlayTint(0.08);
-    }
-    function loseGame(){
-      state.gameOver = true; state.running = false;
-      if(state.tickHandle){ cancelAnimationFrame(state.tickHandle); state.tickHandle=null; }
-      showEndOverlay(false, state.eaten);
-      flashOverlayTint(0.12);
+    // Bonus Expiration Check (6 Seconds)
+    if(state.bonus && (now - state.bonus.spawnTime > BONUS_LIFETIME)) {
+      state.bonus = null; // اختفاء الجائزة
     }
 
-    function showEndOverlay(won, count){
-      overlay.innerHTML = `
-        <div class="card">
-          <h2>${won ? "🎉 فوز" : "💥 خسارة"}</h2>
-          <p class="tips" style="text-align:center">
-            ${won
-              ? `<b>عفيه عليك بكوري!</b> أكلت عدد الأحذية: <b>${count}</b>`
-              : `<b>طيح الله حضّك بكر!</b> ما أكلت بس <b>${count}</b> من ${TARGET_EATS}`
-            }
-          </p>
-          <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:8px">
-            <button id="overlayRestartBtn">لعبة جديدة</button>
-            <button id="overlayHideBtn2" class="sec">إخفاء</button>
-          </div>
-        </div>`;
-      overlay.style.display = "flex";
-      document.getElementById("overlayRestartBtn")?.addEventListener("click", startGame);
-      document.getElementById("overlayHideBtn2")?.addEventListener("click", ()=> overlay.style.display="none");
+    draw(now);
+    requestAnimationFrame(loop);
+  }
+
+  function updateLogic() {
+    state.dir = state.nextDir;
+    
+    // تحريك الفم
+    state.mouthOpen = !state.mouthOpen;
+
+    const head = state.snake[0];
+    let nx = (head.x + state.dir.x + GRID) % GRID;
+    let ny = (head.y + state.dir.y + GRID) % GRID;
+
+    // Check collision (Body)
+    if(state.snake.some((s,i) => i !== state.snake.length-1 && s.x === nx && s.y === ny)) {
+      gameOver();
+      return;
     }
 
-    function flashOverlayTint(alpha=0.12){
-      // تلوين بسيط فور الخسارة/الفوز
-      const orig = ctx.fillStyle;
-      ctx.fillStyle = WALL_HIT_COLOR;
-      ctx.globalAlpha = alpha;
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-      ctx.globalAlpha = 1; ctx.fillStyle = orig;
+    const newHead = {x: nx, y: ny};
+    state.snake.unshift(newHead);
+
+    let ate = false;
+
+    // Eat Food (Shoe)
+    if(state.food && nx === state.food.x && ny === state.food.y) {
+      state.score += 10;
+      state.eaten++;
+      playBark(); // صوت النباح
+      showToast("👟 بالعاااافية بكوري!");
+      spawnFood();
+      ate = true;
+      
+      // فرصة ظهور جائزة كل 4 أكلات مثلاً
+      if(state.eaten % 4 === 0) spawnBonus();
+      
+      // زيادة السرعة
+      if(state.eaten % 5 === 0 && state.speed > 60) state.speed -= 5;
     }
 
-    /*********** الرسم ***********/
-    function draw(t=performance.now()){
-      if(!state) return;
-      const W = canvas.width, H = canvas.height;
-      ctx.clearRect(0,0,W,H);
-      drawGrid();
-      if(state.food)  drawFood(state.food, t);
-      if(state.bonus) drawBonus(state.bonus, t);
-      drawSnake();
+    // Eat Bonus (Poop)
+    else if(state.bonus && nx === state.bonus.x && ny === state.bonus.y) {
+      state.score += 50;
+      state.eaten += 5; // تحسب كـ 5 أحذية
+      playVictorySound(); // موسيقى الانتصار
+      showToast("💩 +5 أحذية!");
+      state.bonus = null;
+      ate = true;
     }
 
-    function drawGrid(){
-      ctx.save();
-      ctx.fillStyle = "#0f1216";
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-      ctx.strokeStyle = "#111820"; ctx.lineWidth = Math.max(1, tile*.03); ctx.globalAlpha=.5;
-      for(let i=0;i<=state.cols;i++){ 
-        ctx.beginPath(); ctx.moveTo(i*tile,0); ctx.lineTo(i*tile,state.rows*tile); ctx.stroke(); 
-      }
-      for (let j = 0; j <= state.rows; j++) {
-        ctx.beginPath(); ctx.moveTo(0,j*tile); ctx.lineTo(state.cols*tile,j*tile); ctx.stroke();
-      }
-      ctx.globalAlpha=1; ctx.restore();
+    if(!ate) state.snake.pop();
+
+    if(state.eaten >= TARGET) win();
+    updateUI();
+  }
+
+  function draw(time) {
+    // Clear
+    ctx.clearRect(0,0, canvas.width, canvas.height);
+
+    // Grid (Light)
+    ctx.strokeStyle = "rgba(255,255,255,0.1)";
+    ctx.lineWidth = 1;
+    for(let i=0; i<=GRID; i++) {
+      ctx.beginPath(); ctx.moveTo(i*tile,0); ctx.lineTo(i*tile,canvas.height); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(0,i*tile); ctx.lineTo(canvas.width,i*tile); ctx.stroke();
     }
 
-    // أحذية: أكبر + نبض خفيف
-    function drawFood(food, t){
-      const {x,y,emoji} = food;
-      const cx = x*tile + tile/2;
-      const cy = y*tile + tile/2;
-      ctx.save();
-      const pulse = 1 + 0.05 * Math.sin((t/420) + (x*7 + y*11));
-      const fontSize = Math.floor(tile * 1.88 * pulse); // ضعف النسخة القديمة + نبض
-      ctx.font = `${fontSize}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+    // Draw Food (Shoes) - Pulsing
+    if(state.food) {
+      const pulse = 1 + Math.sin(time * 0.01) * 0.1;
+      ctx.font = `${tile * 1.2 * pulse}px Arial`;
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.shadowColor = "rgba(0,0,0,.5)"; ctx.shadowBlur = tile*0.18;
-      ctx.fillText(emoji, cx, cy+1);
-      ctx.restore();
+      ctx.fillText(state.food.type, (state.food.x+0.5)*tile, (state.food.y+0.55)*tile);
     }
 
-    // جائزة 💩 مع شعاع/هالة نابضة
-    function drawBonus(bonus, t){
-      const {x,y,createdAt} = bonus;
-      const cx = x*tile + tile/2;
-      const cy = y*tile + tile/2;
-      const age = (t - createdAt) / 1000;
-
-      // هالة نابضة
-      ctx.save();
-      const baseR = tile * 0.95;
-      const r = baseR + (Math.sin(t/250) * tile * 0.12);
-      const grd = ctx.createRadialGradient(cx, cy, r*0.2, cx, cy, r);
-      grd.addColorStop(0, "rgba(255, 210, 0, 0.25)");
-      grd.addColorStop(1, "rgba(255, 210, 0, 0.01)");
-      ctx.fillStyle = grd;
-      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI*2); ctx.fill();
-      ctx.restore();
-
-      // 💩 أكبر من الأكل الاعتيادي
-      ctx.save();
-      const wobble = 1 + 0.06 * Math.sin((t/360) + age);
-      const fontSize = Math.floor(tile * 2.1 * wobble);
-      ctx.font = `${fontSize}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+    // Draw Bonus (Poop) - Fast Pulse
+    if(state.bonus) {
+      const fastPulse = 1 + Math.sin(time * 0.02) * 0.2; // نبض سريع
+      // هالة مقدسة
+      ctx.fillStyle = `rgba(255, 215, 0, ${0.5 + Math.sin(time*0.03)*0.4})`;
+      ctx.beginPath();
+      ctx.arc((state.bonus.x+0.5)*tile, (state.bonus.y+0.5)*tile, tile*0.6, 0, Math.PI*2);
+      ctx.fill();
+      
+      ctx.font = `${tile * 1.3 * fastPulse}px Arial`;
       ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.shadowColor = "rgba(255, 210, 0, .6)";
-      ctx.shadowBlur = tile*0.22;
-      ctx.fillText(BONUS_EMOJI, cx, cy+1);
-      ctx.restore();
+      ctx.fillText("💩", (state.bonus.x+0.5)*tile, (state.bonus.y+0.6)*tile);
+      
+      // شريط وقت صغير فوقها
+      const timeLeft = 1 - (time - state.bonus.spawnTime) / BONUS_LIFETIME;
+      ctx.fillStyle = "red";
+      ctx.fillRect(state.bonus.x*tile, state.bonus.y*tile, tile * timeLeft, 4);
     }
 
-    // جسم الدودة (شكل حيّة واضح) + رأس كلب
-    function drawSnake(){
-      for(let i=state.snake.length-1;i>=1;i--){
-        const seg = state.snake[i];
-        const x = seg.x*tile, y = seg.y*tile;
+    // Draw Snake
+    drawDogSnake(time);
+  }
 
-        ctx.save();
-        const r = Math.max(4, Math.floor(tile*0.28));
-        ctx.lineWidth = Math.max(2, tile*0.08);
-        roundRect(ctx, x+1, y+1, tile-2, tile-2, r);
-        ctx.strokeStyle = BODY_BORDER; ctx.stroke();
+  function drawDogSnake(time) {
+    // الجسم الملتوي
+    for(let i = state.snake.length - 1; i >= 0; i--) {
+      const seg = state.snake[i];
+      const cx = (seg.x + 0.5) * tile;
+      const cy = (seg.y + 0.5) * tile;
 
-        const g = ctx.createLinearGradient(x, y, x, y+tile);
-        g.addColorStop(0, BODY_FILL1); g.addColorStop(1, BODY_FILL2);
-        ctx.fillStyle = g;
-        roundRect(ctx, x+2, y+2, tile-4, tile-4, r*0.8);
+      // تأثير التمايل (Wavy) - لا نغير المنطق، نغير الرسم فقط
+      // الموجة تعتمد على الزمن (time) وترتيب القطعة (i)
+      const waveX = (i===0) ? 0 : Math.sin(time * 0.01 + i * 0.5) * (tile * 0.1);
+      const waveY = (i===0) ? 0 : Math.cos(time * 0.01 + i * 0.5) * (tile * 0.1);
+
+      const drawX = cx + waveX;
+      const drawY = cy + waveY;
+
+      ctx.save();
+      ctx.translate(drawX, drawY);
+
+      if (i === 0) {
+        // --- رسم رأس الكلب (كبير 2x) ---
+        // نحدد زاوية الدوران حسب الاتجاه
+        let angle = 0;
+        if(state.dir.x===1) angle=0;
+        else if(state.dir.x===-1) angle=Math.PI;
+        else if(state.dir.y===1) angle=Math.PI/2;
+        else if(state.dir.y===-1) angle=-Math.PI/2;
+        
+        ctx.rotate(angle);
+        const headSize = tile * 1.8; // حجم مضاعف تقريباً
+        
+        // رسم الرأس
+        ctx.fillStyle = "#D2691E"; // لون الكلب
+        // الجمجمة
+        ctx.beginPath();
+        ctx.ellipse(-headSize*0.2, 0, headSize*0.4, headSize*0.35, 0, 0, Math.PI*2);
+        ctx.fill(); ctx.stroke();
+        
+        // الأذن
+        ctx.fillStyle = "#5D4037";
+        ctx.beginPath();
+        ctx.ellipse(-headSize*0.4, -headSize*0.3, headSize*0.15, headSize*0.25, -0.5, 0, Math.PI*2); // أذن يسار
+        ctx.fill();
+        ctx.beginPath();
+        ctx.ellipse(-headSize*0.4, headSize*0.3, headSize*0.15, headSize*0.25, 0.5, 0, Math.PI*2); // أذن يمين
         ctx.fill();
 
-        // بطن خفيف
-        ctx.globalAlpha = 0.12; ctx.fillStyle = "#ffffff";
-        ctx.fillRect(x+tile*0.18, y+tile*0.42, tile*0.64, tile*0.16);
-        ctx.globalAlpha = 1;
+        // الفم المتحرك (Snout)
+        ctx.fillStyle = "#FFCC80";
+        const jawOpen = state.mouthOpen ? headSize*0.15 : 0;
+        
+        // الفك العلوي
+        ctx.beginPath();
+        ctx.roundRect(0, -headSize*0.2, headSize*0.4, headSize*0.4, 10);
+        ctx.fill();
+        // الأنف
+        ctx.fillStyle = "black";
+        ctx.beginPath(); ctx.arc(headSize*0.35, -headSize*0.1, headSize*0.06, 0, Math.PI*2); ctx.fill();
+        // العين
+        ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(-headSize*0.1, -headSize*0.15, headSize*0.08, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(-headSize*0.08, -headSize*0.15, headSize*0.03, 0, Math.PI*2); ctx.fill();
 
-        // قشور خفيفة
-        ctx.save();
-        ctx.beginPath(); roundRect(ctx, x+2, y+2, tile-4, tile-4, r*0.8); ctx.clip();
-        ctx.globalAlpha = 0.08; ctx.fillStyle = "#053d33";
-        const step = tile*0.33;
-        for(let yy=y+step*0.6; yy<y+tile; yy+=step){
-          for(let xx=x+step*0.6; xx<x+tile; xx+=step){
-            ctx.beginPath(); ctx.arc(xx, yy, step*0.38, 0, Math.PI*2); ctx.fill();
-          }
-        }
-        ctx.restore();
+        // الفك السفلي (يتحرك)
+        ctx.fillStyle = "#D2691E";
+        ctx.beginPath();
+        ctx.roundRect(0, headSize*0.05 + jawOpen, headSize*0.3, headSize*0.15, 5);
+        ctx.fill(); ctx.stroke();
 
-        if(i % 2 === 0){
-          ctx.save();
-          ctx.fillStyle = "#073f37";
-          ctx.font = `${Math.floor(tile*0.45)}px "Noto Naskh Arabic","Segoe UI",Arial`;
-          ctx.textAlign = "center"; ctx.textBaseline = "middle";
-          ctx.fillText(NAME_TEXT, x + tile/2, y + tile/2 + 1);
-          ctx.restore();
-        }
-        ctx.restore();
+      } else if (i === state.snake.length - 1) {
+        // --- رسم الذيل (شعر) ---
+        // نحدد الاتجاه بناء على القطعة التي قبلها
+        const prev = state.snake[i-1];
+        let dx = prev.x - seg.x;
+        let dy = prev.y - seg.y;
+        // تصحيح الالتفاف
+        if(dx > 1) dx = -1; if(dx < -1) dx = 1;
+        if(dy > 1) dy = -1; if(dy < -1) dy = 1;
+        const angle = Math.atan2(dy, dx);
+        
+        ctx.rotate(angle);
+        ctx.fillStyle = SNAKE_COLOR_2;
+        ctx.beginPath();
+        ctx.moveTo(0, 0); // اتصال بالجسم
+        ctx.quadraticCurveTo(-tile, -tile/2, -tile*1.2, 0); // طرف الذيل
+        ctx.quadraticCurveTo(-tile, tile/2, 0, 0);
+        ctx.fill();
+
+      } else {
+        // --- رسم الجسم ---
+        // دائرة متداخلة لتبدو كالحية
+        ctx.fillStyle = (i % 2 === 0) ? SNAKE_COLOR_1 : SNAKE_COLOR_2;
+        ctx.beginPath();
+        ctx.arc(0, 0, tile * 0.55, 0, Math.PI*2);
+        ctx.fill();
+        // لمعة
+        ctx.fillStyle = "rgba(255,255,255,0.2)";
+        ctx.beginPath(); ctx.arc(-tile*0.1, -tile*0.1, tile*0.2, 0, Math.PI*2); ctx.fill();
       }
 
-      // الرأس (كلب) مع تدوير
-      const head = state.snake[0];
-      const hx = head.x*tile, hy = head.y*tile;
-
-      ctx.save();
-      ctx.lineWidth = Math.max(2, tile*0.1);
-      ctx.strokeStyle = HEAD_OUTLINE;
-      ctx.fillStyle = "#15242a";
-      roundRect(ctx, hx+1, hy+1, tile-2, tile-2, Math.max(6, tile*0.28));
-      ctx.fill(); ctx.stroke();
-      ctx.restore();
-
-      const dir = state.dir;
-      const cx = hx + tile/2, cy = hy + tile/2;
-      const angle = dir.x===1?0 : dir.x===-1?Math.PI : dir.y===1?Math.PI/2 : -Math.PI/2;
-
-      ctx.save();
-      ctx.translate(cx, cy); ctx.rotate(angle);
-      const fontSize = Math.floor(tile*0.8);
-      ctx.font = `${fontSize}px "Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji"`;
-      ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      ctx.fillText("🐶", 0, 1);
       ctx.restore();
     }
+  }
 
-    function roundRect(ctx, x, y, w, h, r){
-      const rr = Math.min(r, w/2, h/2);
-      ctx.beginPath();
-      ctx.moveTo(x+rr, y);
-      ctx.arcTo(x+w, y, x+w, y+h, rr);
-      ctx.arcTo(x+w, y+h, x, y+h, rr);
-      ctx.arcTo(x, y+h, x, y, rr);
-      ctx.arcTo(x, y, x+w, y, rr);
-      ctx.closePath();
-    }
+  function showToast(msg) {
+    const t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(() => t.classList.remove("show"), 1500);
+  }
 
-    /*********** التوست ***********/
-    let toastTimer=null;
-    function showToast(msg){
-      toast.textContent = msg; toast.classList.add("show");
-      if(toastTimer) clearTimeout(toastTimer);
-      toastTimer = setTimeout(()=> toast.classList.remove("show"), 1000);
-    }
-    function hideToast(immediate=false){
-      if(immediate){
-        toast.classList.remove("show");
-        if(toastTimer){ clearTimeout(toastTimer); toastTimer=null; }
-      } else { toast.classList.remove("show"); }
-    }
+  function updateUI() {
+    document.getElementById("score").textContent = state.score;
+    document.getElementById("eaten").textContent = state.eaten;
+  }
 
-    /*********** الصوتيات ***********/
-    let audioCtx=null;
-    function initAudio(){ if(!audioCtx){ const AC = window.AudioContext||window.webkitAudioContext; audioCtx=new AC(); } resumeAudio(); }
-    function resumeAudio(){ if(audioCtx && audioCtx.state==="suspended") audioCtx.resume(); }
-    function playChomp(){
-      if(!audioCtx) return;
-      const t0 = audioCtx.currentTime;
-      const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-      osc.type="square"; osc.frequency.setValueAtTime(620,t0); osc.frequency.exponentialRampToValueAtTime(180,t0+0.12);
-      gain.gain.setValueAtTime(0.0001,t0); gain.gain.exponentialRampToValueAtTime(0.3,t0+0.02); gain.gain.exponentialRampToValueAtTime(0.0001,t0+0.14);
-      osc.connect(gain).connect(audioCtx.destination); osc.start(t0); osc.stop(t0+0.16);
-    }
-    function playBurpLaugh(){
-      if(!audioCtx) return;
-      const t0 = audioCtx.currentTime;
-      const burpOsc = audioCtx.createOscillator(); const burpGain = audioCtx.createGain();
-      burpOsc.type="sine"; burpOsc.frequency.setValueAtTime(160,t0); burpOsc.frequency.exponentialRampToValueAtTime(70,t0+0.55);
-      burpGain.gain.setValueAtTime(0.001,t0); burpGain.gain.exponentialRampToValueAtTime(0.45,t0+0.08); burpGain.gain.exponentialRampToValueAtTime(0.0001,t0+0.6);
-      burpOsc.connect(burpGain).connect(audioCtx.destination); burpOsc.start(t0); burpOsc.stop(t0+0.62);
-      for(let i=0;i<3;i++){
-        const start = t0 + 0.65 + i*0.12;
-        const laughOsc = audioCtx.createOscillator(); const laughGain = audioCtx.createGain();
-        laughOsc.type="triangle"; laughOsc.frequency.setValueAtTime(320 + i*20, start);
-        laughGain.gain.setValueAtTime(0.001,start); laughGain.gain.exponentialRampToValueAtTime(0.25,start+0.03); laughGain.gain.exponentialRampToValueAtTime(0.0001,start+0.09);
-        laughOsc.connect(laughGain).connect(audioCtx.destination); laughOsc.start(start); laughOsc.stop(start+0.11);
-      }
-    }
+  function gameOver() {
+    state.running = false;
+    playMarioDeath(); // موسيقى الخسارة
+    document.querySelector("#overlay h2").textContent = "💔 طيح الله حضك يا مطي يا بكر";
+    document.querySelector("#overlay p").innerHTML = `جمعت ${state.eaten} حذاء.<br>العب النوب وكل بكر كم قندرة!`;
+    document.getElementById("startBtn").textContent = "إعادة اللعب";
+    document.getElementById("overlay").style.display = "flex";
+  }
 
-    /*********** إدخال المستخدم ***********/
-    function setDir(dx,dy){
-      if(state && (dx !== -state.dir.x || dy !== -state.dir.y)){ state.nextDir = {x:dx, y:dy}; }
-    }
+  function win() {
+    state.running = false;
+    playVictorySound();
+    document.querySelector("#overlay h2").textContent = "🎉 فزت!";
+    document.querySelector("#overlay p").textContent = "بالعافية يا فسبع ! وكلت بكوري كل الأحذية.";
+    document.getElementById("startBtn").textContent = "يلا نوكل بكر كم حذا مرة النوب";
+    document.getElementById("overlay").style.display = "flex";
+  }
 
-    // كيبورد
-    window.addEventListener("keydown", (e)=>{
-      const k = e.key.toLowerCase();
-      if(["arrowup","w"].includes(k)) { e.preventDefault(); setDir(0,-1); }
-      else if(["arrowdown","s"].includes(k)) { e.preventDefault(); setDir(0, 1); }
-      else if(["arrowleft","a"].includes(k)) { e.preventDefault(); setDir(-1,0); }
-      else if(["arrowright","d"].includes(k)) { e.preventDefault(); setDir(1,0); }
-      else if(k==="p"){ pauseResume(); }
-      else if(k==="enter" && overlay.style.display!=="none"){ startGame(); }
-    }, {passive:false});
+  // Init
+  init();
 
-    // HUD
-    startBtn.addEventListener("click", startGame);
-    pauseBtn.addEventListener("click", pauseResume);
-
-    // Overlay
-    overlayStartBtn.addEventListener("click", startGame);
-    overlayHideBtn.addEventListener("click", ()=> overlay.style.display="none");
-
-    // أزرار الموبايل — ثلاث أحداث لضمان العمل بكل الأجهزة
-    function bindDirBtn(el, dx, dy){
-      const handler = (e)=>{ e.preventDefault(); setDir(dx,dy); };
-      el.addEventListener("pointerdown", handler, {passive:false});
-      el.addEventListener("touchstart", handler, {passive:false});
-      el.addEventListener("click", handler, {passive:false});
-    }
-    bindDirBtn(document.getElementById("btnUp"),    0,-1);
-    bindDirBtn(document.getElementById("btnLeft"), -1, 0);
-    bindDirBtn(document.getElementById("btnDown"),  0, 1);
-    bindDirBtn(document.getElementById("btnRight"), 1, 0);
-
-    // أول تشغيل: اضبط الحجم وورّي التعليمات
-    window.addEventListener("load", fitCanvasToViewport);
-    overlay.style.display = "flex";
-  </script>
+</script>
 </body>
 </html>
