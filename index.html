@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-  <title>لعبة بكر الواقعية 🐶</title>
+  <title>لعبة بكر العملاقة والمعكوسة 🐶🔄</title>
   <style>
     :root {
-      --primary: #00e676; /* لون أخضر ساطع */
-      --secondary: #2979ff;
-      --accent: #ff3d00;
-      --bg: #121212;
-      --glass: rgba(30, 30, 40, 0.85);
-      --text-glow: 0 0 10px rgba(255,255,255,0.5);
+      --primary: #FFC107; /* ذهبي */
+      --secondary: #ff5722;
+      --accent: #795548; /* بني جوزي */
+      --bg: #1a1a1d;
+      --glass: rgba(40, 40, 50, 0.85);
+      --text-glow: 0 0 15px rgba(255, 193, 7, 0.6);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
@@ -21,21 +21,18 @@
       background: var(--bg);
       color: #fff;
       font-family: 'Segoe UI', 'Roboto', sans-serif;
-      height: 100vh; height: 100dvh; /* دعم أفضل للموبايل */
+      height: 100vh; height: 100dvh;
       overflow: hidden;
       display: flex; flex-direction: column;
     }
 
-    /* خلفية ديناميكية */
+    /* خلفية داكنة لتباين أفضل */
     body::before {
       content: ""; position: absolute; inset: 0;
-      background: 
-        radial-gradient(circle at 20% 30%, #1a237e 0%, transparent 50%),
-        radial-gradient(circle at 80% 70%, #004d40 0%, var(--bg) 100%);
-      z-index: -2; opacity: 0.5;
+      background: radial-gradient(circle at center, #2c2c34 0%, #000000 100%);
+      z-index: -2;
     }
 
-    /* تأثير اهتزاز الشاشة */
     @keyframes shake {
       0% { transform: translate(1px, 1px) rotate(0deg); }
       10% { transform: translate(-1px, -2px) rotate(-1deg); }
@@ -48,121 +45,116 @@
     }
     .shake-screen { animation: shake 0.5s; }
 
-    /* HUD - واجهة النقاط */
     .hud {
       display: flex; justify-content: space-between;
       padding: 15px 25px; background: var(--glass);
       backdrop-filter: blur(15px);
-      border-bottom: 2px solid rgba(255,255,255,0.05);
-      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+      border-bottom: 2px solid rgba(255,215,0,0.2);
+      box-shadow: 0 5px 20px rgba(0,0,0,0.5);
       z-index: 10;
     }
 
     .stat-box { display: flex; flex-direction: column; align-items: center; }
-    .stat-label { font-size: 12px; color: #ccc; letter-spacing: 1px; margin-bottom: 4px;}
-    .stat-value { font-size: 24px; font-weight: 900; text-shadow: var(--text-glow); color: var(--primary); }
+    .stat-label { font-size: 12px; color: #aaa; letter-spacing: 1px; margin-bottom: 4px;}
+    .stat-value { font-size: 26px; font-weight: 900; text-shadow: var(--text-glow); color: var(--primary); }
 
-    /* حاوية اللعبة */
     .game-wrap {
       flex: 1; position: relative;
       display: flex; align-items: center; justify-content: center;
-      padding: 20px 10px; /* مساحة حول اللعبة */
+      padding: 15px;
     }
 
     canvas {
-      border-radius: 16px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 0 20px rgba(255,255,255,0.05);
-      background: rgba(0,0,0,0.2); /* خلفية شفافة قليلاً */
+      border-radius: 20px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 30px rgba(0,0,0,0.5);
+      background: #141414;
     }
 
-    /* منطقة التحكم */
     .controls-container {
-      padding: 20px 20px 50px 20px; /* زيادة المسافة السفلية لرفع الأزرار */
+      padding: 20px 20px 60px 20px;
       background: linear-gradient(to top, var(--glass), transparent);
       display: flex; justify-content: center; align-items: center;
-      gap: 40px;
       backdrop-filter: blur(5px);
     }
 
     .d-pad-grid {
-      display: grid; grid-template-columns: repeat(3, 75px); grid-template-rows: repeat(2, 70px); gap: 8px;
+      display: grid; grid-template-columns: repeat(3, 80px); grid-template-rows: repeat(2, 75px); gap: 10px;
     }
 
     .btn-ctrl {
-      background: rgba(255,255,255,0.07);
-      border: 2px solid rgba(255,255,255,0.15);
-      border-radius: 18px; color: white; font-size: 32px;
+      background: rgba(255, 193, 7, 0.1);
+      border: 2px solid rgba(255, 193, 7, 0.3);
+      border-radius: 20px; color: var(--primary); font-size: 36px;
       display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: all 0.1s cubic-bezier(0.4, 0.0, 0.2, 1);
-      box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+      cursor: pointer; transition: all 0.1s;
+      box-shadow: 0 5px 0 rgba(0,0,0,0.5);
     }
-    .btn-ctrl:active { background: var(--primary); transform: translateY(4px); box-shadow: none; color: #000;}
+    .btn-ctrl:active { background: var(--primary); transform: translateY(5px); box-shadow: none; color: #000;}
     
-    /* تنسيق اتجاهات قياسي */
     #btnUp { grid-column: 2; grid-row: 1; }
     #btnLeft { grid-column: 1; grid-row: 2; }
     #btnDown { grid-column: 2; grid-row: 2; }
     #btnRight { grid-column: 3; grid-row: 2; }
 
-    /* القوائم المنبثقة */
     .overlay {
-      position: absolute; inset: 0; background: rgba(0,0,0,0.85);
+      position: absolute; inset: 0; background: rgba(0,0,0,0.9);
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       z-index: 100; text-align: center; padding: 30px;
-      backdrop-filter: blur(8px);
+      backdrop-filter: blur(10px);
     }
     
-    /* شاشة البداية الأولى للموسيقى */
     #startOverlay { z-index: 200; background: #000; }
 
     .card-panel {
-      background: linear-gradient(145deg, rgba(40,40,50,0.9), rgba(20,20,30,0.9));
-      padding: 40px; border-radius: 30px;
-      border: 1px solid rgba(255,255,255,0.1);
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-      max-width: 450px; width: 100%; animation: floatCard 3s ease-in-out infinite alternate;
+      background: linear-gradient(145deg, rgba(50,40,40,0.95), rgba(30,20,20,0.95));
+      padding: 40px; border-radius: 35px;
+      border: 2px solid var(--primary);
+      box-shadow: 0 0 50px rgba(255, 193, 7, 0.3);
+      max-width: 500px; width: 100%;
     }
-    @keyframes floatCard { from { transform: translateY(0); } to { transform: translateY(-10px); } }
 
-    h1 { margin: 0 0 15px; font-size: 2.5em; background: linear-gradient(to right, #fff, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-    .highlight { color: var(--primary); font-weight: bold; }
+    h1 { margin: 0 0 15px; font-size: 2.2em; color: var(--primary); text-shadow: 0 0 10px rgba(255, 193, 7, 0.5); }
+    .highlight { color: var(--primary); font-weight: bold; font-size: 1.1em;}
+    .danger-text { color: #ff5252; font-weight: bold; font-size: 1.2em; }
 
     .btn-action {
-      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      background: linear-gradient(90deg, var(--primary), #FF8F00);
       border: none; padding: 18px 50px; border-radius: 50px;
-      color: #fff; font-weight: 900; font-size: 22px; cursor: pointer;
-      margin-top: 25px; width: 100%; text-transform: uppercase; letter-spacing: 1px;
-      box-shadow: 0 10px 30px -10px var(--secondary); transition: 0.3s;
+      color: #000; font-weight: 900; font-size: 24px; cursor: pointer;
+      margin-top: 25px; width: 100%;
+      box-shadow: 0 10px 30px -5px rgba(255, 193, 7, 0.6); transition: 0.3s;
     }
-    .btn-action:hover { transform: scale(1.05); box-shadow: 0 15px 40px -10px var(--primary); }
+    .btn-action:hover { transform: scale(1.05); box-shadow: 0 15px 40px -5px rgba(255, 193, 7, 0.8); }
 
     .toast-msg {
       position: absolute; top: 15%; left: 50%; transform: translateX(-50%) scale(0.8);
-      background: rgba(0,0,0,0.8); padding: 12px 24px; border-radius: 30px;
-      font-weight: 800; font-size: 18px; border: 2px solid var(--primary);
+      background: rgba(0,0,0,0.9); padding: 15px 30px; border-radius: 40px;
+      font-weight: 800; font-size: 20px; border: 3px solid var(--primary);
+      color: var(--primary);
       opacity: 0; pointer-events: none; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 50;
+      box-shadow: 0 0 30px rgba(255, 193, 7, 0.4);
     }
-    .toast-msg.show { opacity: 1; transform: translateX(-50%) scale(1); top: 18%; }
+    .toast-msg.show { opacity: 1; transform: translateX(-50%) scale(1); top: 20%; }
 
   </style>
 </head>
 <body id="mainBody">
 
 <div id="startOverlay" class="overlay">
-  <div class="card-panel" style="cursor: pointer;" onclick="initAudioAndShowMenu()">
-      <h1 style="font-size: 4em;">🔊</h1>
-      <h1>اضغط لتفعيل الصوت</h1>
-      <p>المتصفح يحتاج إذنك لتشغيل الموسيقى</p>
+  <div class="card-panel" style="cursor: pointer; transform: scale(1.1);" onclick="initAudioAndShowMenu()">
+      <h1 style="font-size: 5em; margin-bottom: 0;">🔄🐶</h1>
+      <h1>اضغط للبدء</h1>
+      <p class="danger-text">⚠️ تحذير: الاتجاهات معكوسة!</p>
   </div>
 </div>
 
 <div class="hud">
   <div class="stat-box">
-    <span class="stat-label">النتيجة</span>
+    <span class="stat-label">النقاط</span>
     <span id="scoreLbl" class="stat-value">0</span>
   </div>
   <div class="stat-box">
-    <span class="stat-label">الأحذية المأكولة 👟</span>
+    <span class="stat-label">الأحذية 👟</span>
     <span id="eatenLbl" class="stat-value">0</span>
   </div>
 </div>
@@ -173,13 +165,14 @@
 
   <div id="menuOverlay" class="overlay" style="display: none;">
     <div class="card-panel">
-      <h1 id="menuTitle">🐶 سوبر بكر الواقعي</h1>
-      <p style="color: #ccc; font-size: 16px; line-height: 1.8;">
-        قم بتوجيه الكلب "بكر" ليأكل الأحذية.<br>
-        احذر من الاصطدام بنفسك!<br>
-        ابحث عن <span class="highlight" style="color:#ffd700">الجوائز الذهبية</span> النادرة.
+      <h1 id="menuTitle">🐶 بكر العملاق والمعكوس</h1>
+      <p style="color: #ddd; font-size: 17px; line-height: 1.8;">
+        <span class="danger-text">انتبه! الاتجاهات مقلوبة تماماً.</span><br>
+        اليمين يصبح يساراً، والأعلى يصبح أسفلاً.<br>
+        الحية أكبر، والغائط الذهبي أضخم!<br>
+        ابحث عن <span class="highlight">الغائط الجوزي المشع</span> (+150 نقطة).
       </p>
-      <button id="playBtn" class="btn-action">ابدأ اللعب</button>
+      <button id="playBtn" class="btn-action">قبلت التحدي!</button>
     </div>
   </div>
 </div>
@@ -194,31 +187,28 @@
 </div>
 
 <script>
-  // --- إعدادات المحرك ---
-  const GRID_SIZE = 22; // عدد المربعات
-  let TILE = 0; // حجم المربع (يتم حسابه)
+  const GRID_SIZE = 20; // تقليل عدد المربعات قليلاً لجعل الحية تبدو أكبر نسبياً
+  let TILE = 0;
   
-  // حالة اللعبة
   let gameState = {
     snake: [], 
-    dir: {x:1, y:0}, // البداية لليمين
+    dir: {x:1, y:0},
     nextDir: {x:1, y:0},
     food: null, bonus: null,
     score: 0, eaten: 0,
-    speed: 110, // سرعة متوسطة
+    speed: 120,
     isRunning: false,
     startTime: 0
   };
 
   const canvas = document.getElementById("gameCanvas");
-  const ctx = canvas.getContext("2d", { alpha: false }); // تحسين الأداء
+  const ctx = canvas.getContext("2d", { alpha: false });
 
-  // --- نظام الصوت المحسن (Web Audio API) ---
+  // --- نظام الصوت ---
   let audioCtx;
-  let bgmOscillators = []; // للموسيقى الخلفية
+  let bgmOscillators = [];
   let isAudioInit = false;
 
-  // دالة لتشغيل نغمة قصيرة (مؤثرات)
   function sfx(freq, duration, type="sine", vol=0.2, detune=0) {
     if(!audioCtx) return;
     const osc = audioCtx.createOscillator();
@@ -230,27 +220,23 @@
     osc.start(); osc.stop(audioCtx.currentTime + duration);
   }
 
-  // تشغيل موسيقى خلفية بسيطة ومتكررة
   function startBGM() {
       if(!audioCtx) return;
-      stopBGM(); // إيقاف أي موسيقى سابقة
-      
-      // خط باص (Bassline) بسيط
+      stopBGM();
       const bass = audioCtx.createOscillator();
       const bassGain = audioCtx.createGain();
       bass.type = 'triangle';
-      bass.frequency.setValueAtTime(110, audioCtx.currentTime); // A2
-      bassGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+      bass.frequency.setValueAtTime(90, audioCtx.currentTime); // نغمة أعمق
+      bassGain.gain.setValueAtTime(0.15, audioCtx.currentTime);
       bass.connect(bassGain); bassGain.connect(audioCtx.destination);
       bass.start();
       bgmOscillators.push(bass);
       
-      // إيقاع بسيط (نغمة تتكرر كل ثانية)
       setInterval(() => {
-          if(audioCtx.state === 'running') {
-               sfx(440, 0.05, "square", 0.02); // تيك خفيف
+          if(audioCtx.state === 'running' && gameState.isRunning) {
+               sfx(300, 0.1, "square", 0.05);
           }
-      }, 1000);
+      }, 800);
   }
 
   function stopBGM() {
@@ -258,24 +244,19 @@
       bgmOscillators = [];
   }
   
-  // التفعيل الأولي للصوت
   function initAudioAndShowMenu() {
       if (!isAudioInit) {
           audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-          // تشغيل نغمة فارغة لفك الحظر
           sfx(0,0, 'sine', 0); 
           isAudioInit = true;
-          startBGM(); // بدء الموسيقى الخلفية فوراً
+          startBGM();
       }
       document.getElementById("startOverlay").style.display = "none";
       document.getElementById("menuOverlay").style.display = "flex";
       resizeGame();
   }
 
-
-  // --- دوال الرسم المتقدمة (الواقعية) ---
-  
-  // دالة مساعدة لرسم شكل بيضوي مدور
+  // --- دوال الرسم (المكبرة والواضحة) ---
   function drawRoundedEllipse(ctx, x, y, w, h, color, rotation=0) {
       ctx.save();
       ctx.translate(x, y);
@@ -288,19 +269,16 @@
   }
 
   function drawRealisticSnake(time) {
-    // رسم الجسم من الذيل إلى الرأس
     for (let i = gameState.snake.length - 1; i >= 0; i--) {
       const segment = gameState.snake[i];
       const cx = (segment.x + 0.5) * TILE;
       const cy = (segment.y + 0.5) * TILE;
       
-      // حساب زاوية الدوران للقطعة الحالية بناءً على القطعة السابقة
       let angle = 0;
       if (i > 0) {
           const prev = gameState.snake[i-1];
           const dx = prev.x - segment.x;
           const dy = prev.y - segment.y;
-          // التعامل مع الالتفاف حول الشاشة
           if(Math.abs(dx) > 1 || Math.abs(dy) > 1) angle = Math.atan2(-dy, -dx);
           else angle = Math.atan2(dy, dx);
       } else {
@@ -312,180 +290,138 @@
       ctx.rotate(angle);
 
       if (i === 0) {
-        // --- رسم رأس الكلب الواقعي ---
-        const headSize = TILE * 1.3;
+        // --- رسم رأس الكلب (مكبر جداً) ---
+        const headSize = TILE * 1.6; // زيادة كبيرة في الحجم
         
-        // الفرو الأساسي (تدرج لوني)
         const furGrad = ctx.createRadialGradient(0, 0, headSize*0.2, 0, 0, headSize*0.6);
-        furGrad.addColorStop(0, "#D9A575"); /* بني ذهبي فاتح */
-        furGrad.addColorStop(1, "#8D5524"); /* بني غامق للأطراف */
+        furGrad.addColorStop(0, "#E6B89C"); // ألوان أفتح وأوضح
+        furGrad.addColorStop(1, "#A66D3A");
         
-        // شكل الرأس الأساسي
         drawRoundedEllipse(ctx, 0, 0, headSize, headSize*0.85, furGrad);
+        drawRoundedEllipse(ctx, headSize*0.25, 0, headSize*0.5, headSize*0.4, "#FCE4EC"); // Snout أفتح
 
-        // منطقة الفم والأنف (Snout) - لون أفتح
-        drawRoundedEllipse(ctx, headSize*0.25, 0, headSize*0.5, headSize*0.4, "#EBD2B4");
-
-        // الأنف
-        drawRoundedEllipse(ctx, headSize*0.45, 0, headSize*0.18, headSize*0.12, "#3E2723");
+        drawRoundedEllipse(ctx, headSize*0.45, 0, headSize*0.2, headSize*0.14, "#2c1b18"); // الأنف
         
-        // العيون
-        const eyeY = -headSize*0.15;
-        const eyeX = headSize*0.1;
-        // بياض العين
-        drawRoundedEllipse(ctx, eyeX, eyeY, headSize*0.15, headSize*0.15, "white");
-        drawRoundedEllipse(ctx, eyeX, -eyeY, headSize*0.15, headSize*0.15, "white");
-        // حدقة العين
-        drawRoundedEllipse(ctx, eyeX+2, eyeY, headSize*0.08, headSize*0.08, "#000");
-        drawRoundedEllipse(ctx, eyeX+2, -eyeY, headSize*0.08, headSize*0.08, "#000");
+        const eyeY = -headSize*0.16;
+        const eyeX = headSize*0.12;
+        drawRoundedEllipse(ctx, eyeX, eyeY, headSize*0.16, headSize*0.16, "white");
+        drawRoundedEllipse(ctx, eyeX, -eyeY, headSize*0.16, headSize*0.16, "white");
+        drawRoundedEllipse(ctx, eyeX+3, eyeY, headSize*0.09, headSize*0.09, "#000");
+        drawRoundedEllipse(ctx, eyeX+3, -eyeY, headSize*0.09, headSize*0.09, "#000");
 
-        // الأذنين (متحركة قليلاً)
-        const earWag = Math.sin(time / 150) * 0.05;
-        ctx.fillStyle = "#6D4C41"; // لون الأذن الغامق
-        // أذن يسرى
-        ctx.beginPath();
-        ctx.ellipse(-headSize*0.2, -headSize*0.35, headSize*0.15, headSize*0.3, -0.3 + earWag, 0, Math.PI*2);
-        ctx.fill();
-        // أذن يمنى
-        ctx.beginPath();
-        ctx.ellipse(-headSize*0.2, headSize*0.35, headSize*0.15, headSize*0.3, 0.3 - earWag, 0, Math.PI*2);
-        ctx.fill();
+        const earWag = Math.sin(time / 120) * 0.08;
+        ctx.fillStyle = "#795548"; 
+        ctx.beginPath(); ctx.ellipse(-headSize*0.25, -headSize*0.38, headSize*0.16, headSize*0.32, -0.4 + earWag, 0, Math.PI*2); ctx.fill();
+        ctx.beginPath(); ctx.ellipse(-headSize*0.25, headSize*0.38, headSize*0.16, headSize*0.32, 0.4 - earWag, 0, Math.PI*2); ctx.fill();
 
-        // --- رسم الاسم "بكر" على الرأس ---
-        ctx.fillStyle = "white";
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = TILE * 0.05;
-        ctx.font = `bold ${TILE * 0.35}px Tahoma`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        
-        // ندور النص 90 درجة ليكون بعرض الرأس (لأن الرأس متجه لليمين حالياً)
+        // الاسم أكبر وأوضح
+        ctx.fillStyle = "white"; ctx.strokeStyle = "black"; ctx.lineWidth = TILE * 0.08;
+        ctx.font = `900 ${TILE * 0.5}px Tahoma`;
+        ctx.textAlign = "center"; ctx.textBaseline = "middle";
         ctx.rotate(Math.PI / 2); 
-        // رسم النص في منتصف الرأس تقريباً
-        ctx.strokeText("بكر", 0, -headSize*0.1);
-        ctx.fillText("بكر", 0, -headSize*0.1);
+        ctx.strokeText("بكر", 0, -headSize*0.05);
+        ctx.fillText("بكر", 0, -headSize*0.05);
 
       } else {
-        // --- رسم الجسم الواقعي (جلد متصل) ---
-        const bodySize = TILE * 0.9;
-        // تدرج لوني للجسم يعطي عمقاً
+        // --- رسم الجسم (مكبر) ---
+        const bodySize = TILE * 1.2; // الجسم أعرض من المربع نفسه
         const bodyGrad = ctx.createLinearGradient(-bodySize/2, -bodySize/2, bodySize/2, bodySize/2);
-        bodyGrad.addColorStop(0, i%2===0 ? "#A16A3A" : "#B87F4B"); // تناوب ألوان البني
-        bodyGrad.addColorStop(1, "#6D4C41"); // ظل غامق
+        bodyGrad.addColorStop(0, i%2===0 ? "#C78D5F" : "#D9A575"); // ألوان أوضح
+        bodyGrad.addColorStop(1, "#8D5524");
 
-        // رسم قطعة الجسم بشكل بيضوي ممدود قليلاً للاتصال
-        drawRoundedEllipse(ctx, 0, 0, bodySize*1.1, bodySize*0.8, bodyGrad);
-        
-        // إضافة ملمس بسيط (نقاط)
-        ctx.fillStyle = "rgba(0,0,0,0.15)";
-        ctx.beginPath(); ctx.arc(bodySize*0.2, -bodySize*0.2, bodySize*0.05, 0, Math.PI*2); ctx.fill();
-        ctx.beginPath(); ctx.arc(-bodySize*0.1, bodySize*0.15, bodySize*0.08, 0, Math.PI*2); ctx.fill();
+        drawRoundedEllipse(ctx, 0, 0, bodySize*1.15, bodySize*0.85, bodyGrad);
       }
-      
       ctx.restore();
     }
   }
 
   function drawItems(time) {
-    // رسم الطعام (حذاء)
     if(gameState.food) {
-        const pulse = 1 + Math.sin(time * 0.008) * 0.1;
-        ctx.font = `${TILE * 1.1 * pulse}px Arial`;
+        const pulse = 1 + Math.sin(time * 0.01) * 0.15;
+        ctx.font = `${TILE * 1.3 * pulse}px Arial`; // حذاء أكبر
         ctx.textAlign = "center"; ctx.textBaseline = "middle";
-        // ظل خفيف تحت الحذاء
-        ctx.fillStyle = "rgba(0,0,0,0.3)";
-        ctx.fillText(gameState.food.type, (gameState.food.x+0.5)*TILE, (gameState.food.y+0.6)*TILE);
-        // الحذاء نفسه
-        ctx.fillText(gameState.food.type, (gameState.food.x+0.5)*TILE, (gameState.food.y+0.5)*TILE);
+        ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 10;
+        ctx.fillText(gameState.food.type, (gameState.food.x+0.5)*TILE, (gameState.food.y+0.55)*TILE);
+        ctx.shadowBlur = 0;
     }
     
-    // رسم الجائزة (غائط ذهبي مشع)
+    // --- رسم الغائط الجوزي الذهبي الضخم ---
     if(gameState.bonus) {
         const x = (gameState.bonus.x+0.5)*TILE;
         const y = (gameState.bonus.y+0.5)*TILE;
         
-        // هالة مشعة
-        const glowSize = TILE * (1 + Math.sin(time * 0.02) * 0.3);
-        const glow = ctx.createRadialGradient(x, y, TILE*0.2, x, y, glowSize);
-        glow.addColorStop(0, "rgba(255, 215, 0, 0.8)");
+        // 1. الهالة الذهبية المشعة الضخمة
+        const glowSize = TILE * (1.5 + Math.sin(time * 0.025) * 0.5); // هالة ضخمة جداً
+        const glow = ctx.createRadialGradient(x, y, TILE*0.5, x, y, glowSize);
+        glow.addColorStop(0, "rgba(255, 215, 0, 1)"); /* ذهبي قوي في الوسط */
+        glow.addColorStop(0.6, "rgba(255, 160, 0, 0.6)");
         glow.addColorStop(1, "rgba(255, 215, 0, 0)");
         ctx.fillStyle = glow;
         ctx.beginPath(); ctx.arc(x, y, glowSize, 0, Math.PI*2); ctx.fill();
 
-        ctx.font = `${TILE * 1.4}px Arial`;
-        ctx.fillText("💩", x, y);
+        // 2. رسم جسم الغائط (لون جوزي) بدلاً من الإيموجي
+        const poopSize = TILE * 0.9; // حجم كبير
+        // قاعدة
+        drawRoundedEllipse(ctx, x, y + poopSize*0.25, poopSize*1.3, poopSize*0.6, "#5D4037");
+        // وسط
+        drawRoundedEllipse(ctx, x, y, poopSize*1.1, poopSize*0.6, "#795548");
+        // قمة
+        drawRoundedEllipse(ctx, x, y - poopSize*0.3, poopSize*0.7, poopSize*0.5, "#8D6E63");
+        
+        // لمعة ذهبية على القمة
+        ctx.shadowColor = "#FFD700"; ctx.shadowBlur = 20;
+        drawRoundedEllipse(ctx, x+poopSize*0.1, y - poopSize*0.35, poopSize*0.2, poopSize*0.15, "#FFECB3");
+        ctx.shadowBlur = 0;
     }
   }
-
 
   // --- منطق اللعبة ---
   function update() {
     if(!gameState.isRunning) return;
 
     gameState.dir = gameState.nextDir;
-    // حساب الموقع الجديد للرأس مع الالتفاف حول الشاشة (Wrap-around)
     let nx = (gameState.snake[0].x + gameState.dir.x + GRID_SIZE) % GRID_SIZE;
     let ny = (gameState.snake[0].y + gameState.dir.y + GRID_SIZE) % GRID_SIZE;
 
-    // التحقق من الاصطدام بالجسم
-    // نبدأ التحقق من القطعة رقم 3 لأن الرأس لا يمكنه الاصطدام بالرقبة مباشرة
     for(let i = 3; i < gameState.snake.length; i++) {
-        if(gameState.snake[i].x === nx && gameState.snake[i].y === ny) {
-            return gameOver();
-        }
+        if(gameState.snake[i].x === nx && gameState.snake[i].y === ny) return gameOver();
     }
 
-    const newHead = {x: nx, y: ny};
-    gameState.snake.unshift(newHead); // إضافة الرأس الجديد
+    gameState.snake.unshift({x: nx, y: ny});
 
     let ate = false;
-
-    // أكل الطعام العادي
     if (gameState.food && nx === gameState.food.x && ny === gameState.food.y) {
-        gameState.score += 10;
-        gameState.eaten++;
-        // صوت أكل + نباح خفيف
-        sfx(500, 0.1, 'square'); setTimeout(()=>sfx(300, 0.15, 'sawtooth', 0.3), 100);
-        showToast("👟 يم يم!", false);
+        gameState.score += 10; gameState.eaten++;
+        sfx(600, 0.08, 'square'); 
+        showToast("👟 أكلت حذاء!", false);
         spawnFood();
         ate = true;
-        // زيادة السرعة قليلاً كل 5 أكلات
-        if(gameState.eaten % 5 === 0 && gameState.speed > 70) gameState.speed -= 4;
+        if(gameState.eaten % 4 === 0 && gameState.speed > 80) gameState.speed -= 5;
     }
-    
-    // أكل الجائزة الكبرى
     else if(gameState.bonus && nx === gameState.bonus.x && ny === gameState.bonus.y) {
-        gameState.score += 100;
-        gameState.eaten += 5;
-        // اهتزاز الشاشة
+        gameState.score += 150; gameState.eaten += 5;
         document.getElementById('mainBody').classList.add('shake-screen');
-        setTimeout(()=>document.getElementById('mainBody').classList.remove('shake-screen'), 500);
-        // صوت انتصار
-        [600, 800, 1000].forEach((f,i) => setTimeout(()=>sfx(f, 0.2, 'triangle', 0.4), i*100));
-        showToast("🌟 جائزة أسطورية! +100", true);
+        setTimeout(()=>document.getElementById('mainBody').classList.remove('shake-screen'), 600);
+        [500, 700, 900, 1200].forEach((f,i) => setTimeout(()=>sfx(f, 0.25, 'sawtooth', 0.3), i*80));
+        showToast("💩 غائط ذهبي عملاق! +150", true);
         gameState.bonus = null;
         ate = true;
     }
 
-    if(!ate) gameState.snake.pop(); // إزالة الذيل إذا لم يأكل
-
+    if(!ate) gameState.snake.pop();
     updateHUD();
   }
 
   function gameLoop(timeStamp) {
-    // رسم الخلفية (لون داكن يغطي الإطارات السابقة)
-    ctx.fillStyle = "#1a1a24"; 
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#0a0a0c"; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // رسم شبكة خفيفة جداً للأرضية
-    ctx.strokeStyle = "rgba(255,255,255,0.04)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    for(let i=0; i<=GRID_SIZE; i++) {
-        ctx.moveTo(i*TILE, 0); ctx.lineTo(i*TILE, canvas.height);
-        ctx.moveTo(0, i*TILE); ctx.lineTo(canvas.width, i*TILE);
+    // رسم الأرضية (مربعات باهتة)
+    ctx.fillStyle = "rgba(255,255,255,0.03)";
+    for(let i=0; i<GRID_SIZE; i++) {
+        for(let j=0; j<GRID_SIZE; j++) {
+            if((i+j)%2===0) ctx.fillRect(i*TILE, j*TILE, TILE, TILE);
+        }
     }
-    ctx.stroke();
 
     if (timeStamp - gameState.startTime > gameState.speed) {
         update();
@@ -494,21 +430,16 @@
     
     drawItems(timeStamp);
     drawRealisticSnake(timeStamp);
-    
     if(gameState.isRunning) requestAnimationFrame(gameLoop);
   }
 
-
-  // --- الوظائف المساعدة ---
   function spawnFood() {
     let pos = getFreePosition();
     gameState.food = { ...pos, type: ["👟","👞","🥾"][Math.floor(Math.random()*3)] };
-    // احتمال 15% لظهور جائزة
-    if(Math.random() < 0.15 && !gameState.bonus) {
+    if(Math.random() < 0.2 && !gameState.bonus) {
         let bonusPos = getFreePosition();
-        gameState.bonus = { ...bonusPos, spawnTime: performance.now() };
-        // تختفي بعد 6 ثواني
-        setTimeout(() => { if(gameState.bonus && gameState.bonus.x === bonusPos.x) gameState.bonus = null; }, 6000);
+        gameState.bonus = { ...bonusPos };
+        setTimeout(() => { if(gameState.bonus && gameState.bonus.x === bonusPos.x) gameState.bonus = null; }, 5000);
     }
   }
 
@@ -524,18 +455,13 @@
   }
 
   function startGame() {
-    // إعادة تعيين الحالة
-    gameState.snake = [{x: Math.floor(GRID_SIZE/2), y: Math.floor(GRID_SIZE/2)}]; // ابدأ بقطعة واحدة (الرأس)
-    // إضافة جسم مبدئي خلف الرأس
+    gameState.snake = [{x: Math.floor(GRID_SIZE/2), y: Math.floor(GRID_SIZE/2)}];
     gameState.snake.push({x: gameState.snake[0].x-1, y: gameState.snake[0].y});
     gameState.snake.push({x: gameState.snake[0].x-2, y: gameState.snake[0].y});
-    
     gameState.dir = {x:1, y:0}; gameState.nextDir = {x:1, y:0};
-    gameState.score = 0; gameState.eaten = 0; gameState.speed = 110;
+    gameState.score = 0; gameState.eaten = 0; gameState.speed = 120;
     gameState.bonus = null; gameState.isRunning = true;
-    
-    updateHUD();
-    spawnFood();
+    updateHUD(); spawnFood();
     document.getElementById("menuOverlay").style.display = "none";
     gameState.startTime = performance.now();
     requestAnimationFrame(gameLoop);
@@ -543,34 +469,22 @@
 
   function gameOver() {
     gameState.isRunning = false;
-    // صوت الخسارة
-    sfx(150, 0.5, 'sawtooth', 0.5); sfx(100, 0.6, 'sine', 0.5, -50);
-    
-    document.getElementById("menuTitle").innerHTML = "💥 اصطدمت!";
-    document.querySelector("#menuOverlay p").innerHTML = `النتيجة النهائية: <span class="highlight">${gameState.score}</span><br>أكل بكر ${gameState.eaten} حذاء.`;
-    document.getElementById("playBtn").textContent = "إعادة المحاولة";
+    sfx(150, 0.6, 'sawtooth', 0.6);
+    document.getElementById("menuTitle").innerHTML = "💥 خسرت! الاتجاهات صعبة؟";
+    document.querySelector("#menuOverlay p").innerHTML = `النتيجة: <span class="highlight">${gameState.score}</span> | الأحذية: ${gameState.eaten}<br><span class="danger-text">تذكر: الاتجاهات معكوسة!</span>`;
+    document.getElementById("playBtn").textContent = "حاول مرة أخرى (بعكس الاتجاهات)";
     document.getElementById("menuOverlay").style.display = "flex";
   }
 
   function resizeGame() {
     const wrapper = document.getElementById("gameWrapper");
-    // نأخذ أصغر بُعد (عرض أو ارتفاع) ونطرح منه الهوامش لنجعل اللعبة مربعة
-    const size = Math.min(wrapper.clientWidth, wrapper.clientHeight) - 30;
-    
-    // دعم شاشات الريتينا (عالية الدقة) للحصول على رسم حاد
+    const size = Math.min(wrapper.clientWidth, wrapper.clientHeight) - 20;
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-    canvas.style.width = size + "px";
-    canvas.style.height = size + "px";
-    ctx.scale(dpr, dpr); // تكبير سياق الرسم
-    
-    TILE = size / GRID_SIZE; // حساب حجم المربع الجديد
-    
-    if(!gameState.isRunning && isAudioInit) {
-         // رسم إطار واحد ثابت إذا كانت اللعبة متوقفة
-         drawRealisticSnake(0);
-    }
+    canvas.width = size * dpr; canvas.height = size * dpr;
+    canvas.style.width = size + "px"; canvas.style.height = size + "px";
+    ctx.scale(dpr, dpr);
+    TILE = size / GRID_SIZE;
+    if(!gameState.isRunning && isAudioInit) drawRealisticSnake(0);
   }
 
   function updateHUD() {
@@ -581,24 +495,26 @@
   function showToast(msg, isImportant) {
       const t = document.getElementById("toastBox");
       t.textContent = msg;
-      t.style.borderColor = isImportant ? "#ffd700" : "var(--primary)";
-      t.style.color = isImportant ? "#ffd700" : "#fff";
+      t.style.borderColor = isImportant ? "#FFC107" : "rgba(255,255,255,0.5)";
+      t.style.color = isImportant ? "#FFC107" : "#fff";
+      t.style.boxShadow = isImportant ? "0 0 30px var(--primary)" : "none";
       t.classList.add("show");
-      setTimeout(() => t.classList.remove("show"), 2000);
+      setTimeout(() => t.classList.remove("show"), 1500);
   }
 
-
-  // --- التحكم ---
+  // --- التحكم (المعكوس!) ---
   function setDir(x, y) {
-      // منع العودة للخلف مباشرة (مثلاً إذا كنت تمشي يمين لا يمكنك ضغط يسار فوراً)
-      if (gameState.dir.x !== -x && gameState.dir.y !== -y) {
-          gameState.nextDir = {x, y};
-          // صوت نقرة خفيفة عند تغيير الاتجاه
-          if(gameState.isRunning) sfx(800, 0.03, 'sine', 0.05);
+      // هنا يكمن السر: نقوم بعكس المدخلات (ضرب في -1)
+      const reversedX = -x;
+      const reversedY = -y;
+
+      if (gameState.dir.x !== -reversedX && gameState.dir.y !== -reversedY) {
+          gameState.nextDir = {x: reversedX, y: reversedY};
+          if(gameState.isRunning) sfx(1000, 0.02, 'sine', 0.1);
       }
   }
 
-  // ربط الأزرار (المنطق القياسي: يمين=1، يسار=-1)
+  // الأزرار ترسل الاتجاه الطبيعي، والدالة setDir تعكسه
   document.getElementById("btnUp").addEventListener('pointerdown', e => { e.preventDefault(); setDir(0, -1); });
   document.getElementById("btnDown").addEventListener('pointerdown', e => { e.preventDefault(); setDir(0, 1); });
   document.getElementById("btnLeft").addEventListener('pointerdown', e => { e.preventDefault(); setDir(-1, 0); });
@@ -606,6 +522,7 @@
   document.getElementById("playBtn").onclick = startGame;
 
   window.addEventListener("keydown", e => {
+      // الكيبورد أيضاً يرسل الاتجاه الطبيعي ليتم عكسه
       if(["ArrowUp","w"].includes(e.key)) setDir(0, -1);
       if(["ArrowDown","s"].includes(e.key)) setDir(0, 1);
       if(["ArrowLeft","a"].includes(e.key)) setDir(-1, 0);
@@ -613,9 +530,6 @@
   });
   
   window.addEventListener("resize", resizeGame);
-
-  // الإعداد الأولي (لن يبدأ حتى يضغط المستخدم على الشاشة الأولى)
-  // resizeGame() سيتم استدعاؤها داخل initAudioAndShowMenu
 </script>
 </body>
 </html>
