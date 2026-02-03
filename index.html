@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>لعبة الدودة — هدف 50 حذاء</title>
+  <style>
+    :root{
+      --bg:#14161a;
+      --panel:#1c2026;
+      --accent:#00d0b0;
+      --accent2:#ffd166;
+      --danger:#ff4d4f;
+      --text:#e8ecef;
+      --snakeBorder:#083d2d;
+      --snakeFill1:#1bc8a8;
+      --snakeFill2:#0fb18c;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; background:radial-gradient(1000px 600px at 50% -10%, #222a33 0, var(--bg) 60%);
+      color:var(--text); font-family:"Segoe UI", Tahoma, Arial, system-ui, -apple-system;
+      display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px;
+    }
+    .wrap{ width:min(92vw, 720px); }
+    h1{ margin:0 0 8px; font-size:clamp(20px, 3.2vw, 28px); }
+    .sub{ margin:0 0 14px; color:#aeb8c4; font-size:14px; }
+
+    .hud{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;
+      background:linear-gradient(180deg, #1e232a 0, var(--panel) 100%);
+      border:1px solid #2a3038; border-radius:12px; padding:10px 12px; margin-bottom:10px;
+    }
+    .stat{display:flex; gap:8px; align-items:baseline; font-weight:700}
+    .v{color:var(--accent)}
+    .btns{display:flex; gap:8px; flex-wrap:wrap}
+    button{
+      background:var(--accent); color:#002a24; border:none; border-radius:10px;
+      padding:8px 14px; font-weight:800; cursor:pointer; transition:transform .05s ease;
+    }
+    button:active{transform:scale(.98)}
+    button.sec{background:#2b3440; color:#e5eef5; border:1px solid #394352}
+
+    .canvas-wrap{
+      position:relative; border-radius:14px; overflow:hidden;
+      border:1px solid #2a3038;
+      box-shadow: 0 10px 24px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.03);
+      background:#0f1216;
+    }
+    canvas{
+      width:100%; height:auto; display:block;
+      background:repeating-linear-gradient(0deg, #0f1216 0 24px, #11161c 24px 48px);
+    }
+
+    /* توست أعلى اللوحة */
+    .toast{
+      position:absolute; top:10px; left:50%;
+      transform:translateX(-50%) translateY(-12px);
+      opacity:0; transition: opacity .25s ease, transform .25s ease;
+      background:#15222b; color:#eaf6f3; border:1px solid #2a3038;
+      padding:8px 14px; border-radius:999px; font-weight:800; letter-spacing:.2px;
+      box-shadow:0 6px 18px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
+      pointer-events:none;
+    }
+    .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+
+    .overlay{
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+      background:linear-gradient(180deg, rgba(20,22,26,.55), rgba(20,22,26,.75));
+      backdrop-filter:saturate(120%) blur(2px);
+      text-align:center; padding:20px;
+    }
+    .card{
+      background:#11161c; border:1px solid #2a3038; border-radius:14px; padding:18px; max-width:540px;
+    }
+    .card h2{margin:0 0 8px}
+    .tips{font-size:14px; color:#b7c3cf; line-height:1.6; text-align:justify}
+    .grid-legend{display:flex; gap:10px; margin:10px 0 0; justify-content:center; flex-wrap:wrap}
+    .legend-item{display:flex; gap:6px; align-items:center; background:#0e1318; padding:6px 10px; border-radius:8px; border:1px solid #26303a}
+    .key{background:#222b35; border:1px solid #344150; border-radius:6px; padding:2px 6px; font-family:monospace; font-size:13px}
+
+    /* أزرار موبايل */
+    .mobile-ctrl{
+      display:grid; grid-template-columns:60px 60px 60px; gap:8px; justify-content:center; margin:12px 0;
+      touch-action:none; user-select:none;
+    }
+    .mobile-ctrl button{padding:12px 0; border-radius:12px}
+    .empty{visibility:hidden}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>🐶🐍 لعبة الدودة — هدفك 50 حذاء</h1>
+    <p class="sub">جسم الدودة شكل حَيّة أوضح، الأحذية أكبر، وعند الفوز تسمع تجشؤ ويا ضحكة 😄</p>
+
+    <div class="hud">
+      <div class="stat">النتيجة: <span id="score" class="v">0</span></div>
+      <div class="stat">أكلت: <span id="eaten" class="v">0</span> / <span id="target" class="v">50</span></div>
+      <div class="stat">المتبقي: <span id="left" class="v">50</span></div>
+      <div class="btns">
+        <button id="startBtn">ابدأ / من جديد</button>
+        <button id="pauseBtn" class="sec">إيقاف مؤقت (P)</button>
+      </div>
+    </div>
+
+    <div class="canvas-wrap">
+      <canvas id="game" width="600" height="600" aria-label="لوحة اللعبة"></canvas>
+
+      <!-- التوست أعلى اللوحة -->
+      <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
+
+      <div id="overlay" class="overlay" role="dialog" aria-modal="true">
+        <div class="card">
+          <h2>جاهز؟ خل نلعب! 🎮</h2>
+          <div class="tips">
+            <p>رأس الدودة كلب 🐶، والأكل أحذية 👟👞🥾👠 وغيرها. هدفك تأكل <b>50</b> حذاء حتى تفوز.</p>
+            <ul>
+              <li>التحكم: الأسهم ⬅️⬆️⬇️➡️ أو WASD</li>
+              <li>موبايل: أزرار اللمس بالأسفل</li>
+              <li>إيقاف مؤقت: زر <span class="key">P</span></li>
+            </ul>
+            <div class="grid-legend">
+              <span class="legend-item">الرأس: 🐶</span>
+              <span class="legend-item">الأكل: 👟/👞/🥾/👠/… (أكبر)</span>
+              <span class="legend-item">جسم الدودة: شكل حَيّة أوضح</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- أزرار موبايل -->
+    <div class="mobile-ctrl" aria-hidden="false">
+      <span class="empty"></span>
+      <button id="btnUp" class="sec">⬆️</button>
+      <span class="empty"></span>
+      <button id="btnLeft" class="sec">⬅️</button>
+      <button id="btnDown" class="sec">⬇️</button>
+      <button id="btnRight" class="sec">➡️</button>
+    </div>
+  </div>
+
+  <script>
+    /*********** إعدادات قابلة للتعديل ***********/
+    const NAME_TEXT = "بكر";        // الاسم على جسم الدودة
+    const GRID = 20;                // حجم الشبكة (أقل = مربعات أكبر = وضوح أعلى)
+    const BASE_SPEED_MS = 135;      // السرعة الابتدائية
+    const SPEED_STEP = 7;           // كل كم قطعة تتسارع الدودة
+    const TARGET_EATS = 50;         // هدفك 50 حذاء
+    const MIN_SPEED_MS = 70;
+
+    const BODY_BORDER = getComputedStyle(document.documentElement).getPropertyValue('--snakeBorder').trim();
+    const BODY_FILL1 = getComputedStyle(document.documentElement).getPropertyValue('--snakeFill1').trim();
+    const BODY_FILL2 = getComputedStyle(document.documentElement).getPropertyValue('--snakeFill2').trim();
+    const HEAD_OUTLINE = getComputedStyle(document.documentElement).getPropertyValue('--accent2').trim();
+    const WALL_HIT_COLOR = getComputedStyle(document.documentElement).getPropertyValue('--danger').trim();
+
+    // أحذية (أكبر وأوضح)
+    const SHOES = ["👟","👞","🥾","👠","🥿","🩰","🩴","🛼"];
+
+    /*********** عناصر DOM ***********/
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const scoreEl = document.getElementById("score");
+    const eatenEl = document.getElementById("eaten");
+    const targetEl = document.getElementById("target");
+    const leftEl = document.getElementById("left");
+    const overlay = document.getElementById("overlay");
+    const startBtn = document.getElementById("startBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const toast = document.getElementById("toast");
+    targetEl.textContent = TARGET_EATS;
+
+    // دعم دقة الشاشات العالية + الحفاظ على مربع
+    function fitCanvasToDPR(){
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      const cssSize = canvas.getBoundingClientRect();
+      const size = Math.min(cssSize.width, cssSize.height || cssSize.width);
+      canvas.style.width = `${size}px`;
+      canvas.style.height = `${size}px`;
+      const px = Math.floor(size * dpr);
+      canvas.width = px;
+      canvas.height = px;
+    }
+    fitCanvasToDPR();
+    window.addEventListener("resize", fitCanvasToDPR);
+
+    let tile;   // حجم الخلية بالبكسل
+    let state;
+
+    function defaultState(){
+      const cols = GRID, rows = GRID;
+      tile = Math.floor(Math.min(canvas.width, canvas.height) / GRID);
+      const startX = Math.floor(cols/2);
+      const startY = Math.floor(rows/2);
+
+      return {
+        cols, rows,
+        snake: [
+          {x:startX, y:startY},
+          {x:startX-1, y:startY},
+          {x:startX-2, y:startY}
+        ],
+        dir: {x:1, y:0},
+        nextDir: {x:1, y:0},
+        food: spawnFoodRandom(cols, rows, new Set()),
+        score: 0,
+        eaten: 0,
+        speedMs: BASE_SPEED_MS,
+        running: false,
+        paused: false,
+        gameOver: false,
+        won: false,
+        tickHandle: null,
+        lastStepAt: 0
+      };
+    }
+
+    function coordKey(x,y){ return `${x},${y}`; }
+    function snakeSet(snake){ const s = new Set(); for(const c of snake){ s.add(coordKey(c.x,c.y)); } return s; }
+
+    function spawnFoodRandom(cols, rows, bannedSet){
+      let x,y,tries=0;
+      do{
+        x = Math.floor(Math.random()*cols);
+        y = Math.floor(Math.random()*rows);
+        tries++; if(tries>500) break;
+      }while(bannedSet.has(coordKey(x,y)));
+      const emoji = SHOES[Math.floor(Math.random()*SHOES.length)];
+      return {x,y,emoji};
+    }
+
+    function startGame(){
+      state = defaultState();
+      overlay.style.display = "none";
+      hideToast(true);
+      scoreEl.textContent = "0";
+      eatenEl.textContent = "0";
+      leftEl.textContent = TARGET_EATS;
+      state.running = true;
+      state.paused = false;
+      state.gameOver = false;
+      state.won = false;
+
+      // تهيئة الصوت بعد تفاعل المستخدم
+      initAudio();
+
+      scheduleNextTick(true);
+      draw();
+    }
+
+    function pauseResume(){
+      if(!state?.running || state?.gameOver) return;
+      state.paused = !state.paused;
+      if(!state.paused){ scheduleNextTick(true); resumeAudio(); }
+      else { if(state.tickHandle) cancelAnimationFrame(state.tickHandle); state.tickHandle = null; }
+      pauseBtn.textContent = state.paused ? "تابع اللعب (P)" : "إيقاف مؤقت (P)";
+    }
+
+    function scheduleNextTick(reset=false){
+      if(reset && state.tickHandle){ cancelAnimationFrame(state.tickHandle); }
+      state.lastStepAt = performance.now();
+      const step = (t)=>{
+        const elapsed = t - state.lastStepAt;
+        if(elapsed >= state.speedMs){ stepGame(); state.lastStepAt = t; }
+        draw();
+        if(state.running && !state.paused && !state.gameOver){ state.tickHandle = requestAnimationFrame(step); }
+      };
+      state.tickHandle = requestAnimationFrame(step);
+    }
+
+    function stepGame(){
+      if(!state || !state.running || state.paused || state.gameOver) return;
+
+      const {x:nx, y:ny} = state.nextDir;
+      if(!(nx === -state.dir.x && ny === -state.dir.y)){ state.dir = {x:nx, y:ny}; }
+
+      const head = state.snake[0];
+      const newHead = {x: head.x + state.dir.x, y: head.y + state.dir.y};
+
+      // حيط؟
+      if(newHead.x < 0 || newHead.y < 0 || newHead.x >= state.cols || newHead.y >= state.rows){
+        return loseGame();
+      }
+
+      // اصطدام بالنفس؟
+      const bodySet = snakeSet(state.snake.slice(0, -1));
+      if(bodySet.has(coordKey(newHead.x, newHead.y))){
+        return loseGame();
+      }
+
+      // تحريك
+      state.snake.unshift(newHead);
+
+      // أكل؟
+      if(newHead.x === state.food.x && newHead.y === state.food.y){
+        state.score += 10;
+        state.eaten += 1;
+        scoreEl.textContent = state.score;
+        eatenEl.textContent = state.eaten;
+        leftEl.textContent = Math.max(0, TARGET_EATS - state.eaten);
+
+        playChomp();
+        showToast("بالعافية بكوري");
+
+        // تسريع تدريجي
+        if(state.eaten % SPEED_STEP === 0 && state.speedMs > MIN_SPEED_MS){
+          state.speedMs -= 8;
+        }
+
+        // فوز إذا وصل الهدف
+        if(state.eaten >= TARGET_EATS){
+          return winGame();
+        }
+
+        // سبون أكل جديد
+        const occupied = snakeSet(state.snake);
+        state.food = spawnFoodRandom(state.cols, state.rows, occupied);
+      } else {
+        // ماكو أكل: قص الذيل
+        state.snake.pop();
+      }
+    }
+
+    function winGame(){
+      state.won = true;
+      state.gameOver = true;
+      state.running = false;
+      if(state.tickHandle){ cancelAnimationFrame(state.tickHandle); state.tickHandle = null; }
+
+      playBurpLaugh();
+
+      overlay.innerHTML = `
+        <div class="card">
+          <h2>🎉 فوز! </h2>
+          <p class="tips"><b>عفيه عليك بكوري!</b> أكلت عدد الأحذية: <b>${state.eaten}</b></p>
+          <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:8px">
+            <button onclick="(${startGame.toString()})();">أعد اللعب</button>
+            <button class="sec" onclick="document.getElementById('overlay').style.display='none'">إخفاء</button>
+          </div>
+        </div>`;
+      overlay.style.display = "flex";
+      flashWallHit(0.08);
+    }
+
+    function loseGame(){
+      state.gameOver = true;
+      state.running = false;
+      if(state.tickHandle){ cancelAnimationFrame(state.tickHandle); state.tickHandle = null; }
+
+      overlay.innerHTML = `
+        <div class="card">
+          <h2>💥 خسارة</h2>
+          <p class="tips"><b>طيح الله حضك بكر!</b> ما أكلت بس <b>${state.eaten}</b> من ${TARGET_EATS}</p>
+          <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:8px">
+            <button onclick="(${startGame.toString()})();">حاول مرة ثانية</button>
+            <button class="sec" onclick="document.getElementById('overlay').style.display='none'">إخفاء</button>
+          </div>
+        </div>`;
+      overlay.style.display = "flex";
+      flashWallHit(0.12);
+    }
+
+    function flashWallHit(alpha=0.12){
+      const orig = ctx.fillStyle;
+      ctx.fillStyle = WALL_HIT_COLOR;
+      ctx.globalAlpha = alpha;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = orig;
+    }
+
+    /*********** الرسم ***********/
+    function draw(){
+      if(!state) return;
+      const W = canvas.width, H = canvas.height;
+
+      // خلفية الشبكة
+      ctx.clearRect(0,0,W,H);
+      drawGrid();
+
+      // الأكل (حذاء) — أكبر وأوضح
+      drawFood(state.food);
+
+      // الدودة (شكل حيّة أوضح)
+      drawSnake();
+    }
+
+    function drawGrid(){
+      ctx.save();
+      ctx.fillStyle = "#0f1216";
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+
+      ctx.strokeStyle = "#111820";
+      ctx.lineWidth = Math.max(1, tile * 0.03);
+      ctx.globalAlpha = 0.5;
+      for(let i=0;i<=state.cols;i++){
+        ctx.beginPath(); ctx.moveTo(i*tile, 0); ctx.lineTo(i*tile, state.rows*tile); ctx.stroke();
+      }
+      for(let j=0;j<=state.rows;j++){
+        ctx.beginPath(); ctx.moveTo(0, j*tile); ctx.lineTo(state.cols*tile, j*tile); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+
+    function drawFood(food){
+      const {x,y,emoji} = food;
+      const cx = x*tile + tile/2;
+      const cy = y*tile + tile/2;
+      ctx.save();
+      const fontSize = Math.floor(tile*0.94); // أكبر
+      ctx.font = `${fontSize}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      // هالة خفيفة لزيادة الوضوح
+      ctx.shadowColor = "rgba(0,0,0,.45)";
+      ctx.shadowBlur = tile*0.14;
+      ctx.fillText(emoji, cx, cy+1);
+      ctx.restore();
+    }
+
+    // رسم جسم بشكل حية (تدرّج + إطار + قشور خفيفة)
+    function drawSnake(){
+      // الجسم
+      for(let i=state.snake.length-1;i>=1;i--){
+        const seg = state.snake[i];
+        const x = seg.x*tile, y = seg.y*tile;
+
+        // إطار خارجي
+        ctx.save();
+        const r = Math.max(4, Math.floor(tile*0.28));
+        ctx.lineWidth = Math.max(2, tile*0.08);
+        roundRect(ctx, x+1, y+1, tile-2, tile-2, r);
+        ctx.strokeStyle = BODY_BORDER;
+        ctx.stroke();
+
+        // تعبئة متدرّجة (لون حيّة)
+        const g = ctx.createLinearGradient(x, y, x, y+tile);
+        g.addColorStop(0, BODY_FILL1);
+        g.addColorStop(1, BODY_FILL2);
+        ctx.fillStyle = g;
+        roundRect(ctx, x+2, y+2, tile-4, tile-4, r*0.8);
+        ctx.fill();
+
+        // حزام/بطن خفيف لزيادة الإحساس بالشكل
+        ctx.globalAlpha = 0.12;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(x+tile*0.18, y+tile*0.42, tile*0.64, tile*0.16);
+        ctx.globalAlpha = 1;
+
+        // نمط قشور خفيف
+        ctx.save();
+        ctx.beginPath();
+        roundRect(ctx, x+2, y+2, tile-4, tile-4, r*0.8);
+        ctx.clip();
+        ctx.globalAlpha = 0.08;
+        ctx.fillStyle = "#053d33";
+        const step = tile*0.33;
+        for(let yy=y+step*0.6; yy<y+tile; yy+=step){
+          for(let xx=x+step*0.6; xx<x+tile; xx+=step){
+            ctx.beginPath();
+            ctx.arc(xx, yy, step*0.38, 0, Math.PI*2);
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+
+        // كتابة "بكر" على بعض القطع (أوضح)
+        if(i % 2 === 0){
+          ctx.save();
+          ctx.fillStyle = "#073f37";
+          ctx.font = `${Math.floor(tile*0.45)}px "Noto Naskh Arabic", "Segoe UI", Arial`;
+          ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          ctx.fillText(NAME_TEXT, x + tile/2, y + tile/2 + 1);
+          ctx.restore();
+        }
+        ctx.restore();
+      }
+
+      // الرأس (كلب) مع تدوير حسب الاتجاه
+      const head = state.snake[0];
+      const hx = head.x*tile, hy = head.y*tile;
+
+      // خلفية إطار للرأس
+      ctx.save();
+      ctx.lineWidth = Math.max(2, tile*0.1);
+      ctx.strokeStyle = HEAD_OUTLINE;
+      ctx.fillStyle = "#15242a";
+      roundRect(ctx, hx+1, hy+1, tile-2, tile-2, Math.max(6, tile*0.28));
+      ctx.fill(); ctx.stroke();
+      ctx.restore();
+
+      const dir = state.dir;
+      const centerX = hx + tile/2;
+      const centerY = hy + tile/2;
+      const angle = dir.x===1?0 : dir.x===-1?Math.PI : dir.y===1?Math.PI/2 : -Math.PI/2;
+
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.rotate(angle);
+      const fontSize = Math.floor(tile*0.8);
+      ctx.font = `${fontSize}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji"`;
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("🐶", 0, 1);
+      ctx.restore();
+    }
+
+    function roundRect(ctx, x, y, w, h, r){
+      const rr = Math.min(r, w/2, h/2);
+      ctx.beginPath();
+      ctx.moveTo(x+rr, y);
+      ctx.arcTo(x+w, y, x+w, y+h, rr);
+      ctx.arcTo(x+w, y+h, x, y+h, rr);
+      ctx.arcTo(x, y+h, x, y, rr);
+      ctx.arcTo(x, y, x+w, y, rr);
+      ctx.closePath();
+    }
+
+    /*********** توست أعلى اللوحة ***********/
+    let toastTimer = null;
+    function showToast(msg){
+      toast.textContent = msg;
+      toast.classList.add("show");
+      if(toastTimer){ clearTimeout(toastTimer); }
+      toastTimer = setTimeout(()=> toast.classList.remove("show"), 950);
+    }
+    function hideToast(immediate=false){
+      if(immediate){
+        toast.classList.remove("show");
+        if(toastTimer){ clearTimeout(toastTimer); toastTimer=null; }
+      } else {
+        toast.classList.remove("show");
+      }
+    }
+
+    /*********** صوتيات (Web Audio API) ***********/
+    let audioCtx = null;
+    function initAudio(){
+      if(!audioCtx){
+        const AC = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AC();
+      }
+      resumeAudio();
+    }
+    function resumeAudio(){
+      if(audioCtx && audioCtx.state === "suspended"){ audioCtx.resume(); }
+    }
+
+    // صوت قضم سريع
+    function playChomp(){
+      if(!audioCtx) return;
+      const t0 = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = "square";
+      osc.frequency.setValueAtTime(620, t0);
+      osc.frequency.exponentialRampToValueAtTime(180, t0 + 0.12);
+
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.exponentialRampToValueAtTime(0.3, t0 + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.14);
+
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start(t0);
+      osc.stop(t0 + 0.16);
+    }
+
+    // تجشؤ + ضحكة بسيطة (توليد اصطناعي)
+    function playBurpLaugh(){
+      if(!audioCtx) return;
+      const t0 = audioCtx.currentTime;
+
+      // Burp: نغمة سينية منخفضة تنزلق نزولاً
+      const burpOsc = audioCtx.createOscillator();
+      const burpGain = audioCtx.createGain();
+      burpOsc.type = "sine";
+      burpOsc.frequency.setValueAtTime(160, t0);
+      burpOsc.frequency.exponentialRampToValueAtTime(70, t0 + 0.55);
+      burpGain.gain.setValueAtTime(0.001, t0);
+      burpGain.gain.exponentialRampToValueAtTime(0.45, t0 + 0.08);
+      burpGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.6);
+      burpOsc.connect(burpGain).connect(audioCtx.destination);
+      burpOsc.start(t0);
+      burpOsc.stop(t0 + 0.62);
+
+      // Laugh: ثلاث نبضات “ها ها ها”
+      for(let i=0;i<3;i++){
+        const start = t0 + 0.65 + i*0.12;
+        const laughOsc = audioCtx.createOscillator();
+        const laughGain = audioCtx.createGain();
+        laughOsc.type = "triangle";
+        laughOsc.frequency.setValueAtTime(320 + i*20, start);
+        laughGain.gain.setValueAtTime(0.001, start);
+        laughGain.gain.exponentialRampToValueAtTime(0.25, start + 0.03);
+        laughGain.gain.exponentialRampToValueAtTime(0.0001, start + 0.09);
+        laughOsc.connect(laughGain).connect(audioCtx.destination);
+        laughOsc.start(start);
+        laughOsc.stop(start + 0.11);
+      }
+    }
+
+    /*********** إدخال المستخدم ***********/
+    function setDir(dx,dy){
+      if(state && (dx !== -state.dir.x || dy !== -state.dir.y)){
+        state.nextDir = {x:dx, y:dy};
+      }
+    }
+
+    window.addEventListener("keydown", (e)=>{
+      const k = e.key.toLowerCase();
+      if(["arrowup","w"].includes(k)) { e.preventDefault(); setDir(0,-1); }
+      else if(["arrowdown","s"].includes(k)) { e.preventDefault(); setDir(0, 1); }
+      else if(["arrowleft","a"].includes(k)) { e.preventDefault(); setDir(-1,0); }
+      else if(["arrowright","d"].includes(k)) { e.preventDefault(); setDir(1,0); }
+      else if(k==="p"){ pauseResume(); }
+      else if(k==="enter" && overlay.style.display!=="none"){ startGame(); }
+    }, {passive:false});
+
+    startBtn.addEventListener("click", startGame);
+    pauseBtn.addEventListener("click", pauseResume);
+
+    document.getElementById("btnUp").addEventListener("click", ()=>setDir(0,-1));
+    document.getElementById("btnDown").addEventListener("click", ()=>setDir(0,1));
+    document.getElementById("btnLeft").addEventListener("click", ()=>setDir(-1,0));
+    document.getElementById("btnRight").addEventListener("click", ()=>setDir(1,0));
+
+    // بداية: عرض التعليمات
+    overlay.style.display = "flex";
+  </script>
+</body>
+</html>
